@@ -59,7 +59,7 @@
 
         .logo {
             font-size: 2.4em;
-            font-weight: 900; /* Très Gras */
+            font-weight: 900; 
             color: var(--secondary-color);
         }
         
@@ -87,7 +87,7 @@
             left: 50%;
             bottom: -5px;
             width: 0;
-            height: 3px; /* Plus épais */
+            height: 3px; 
             background-color: var(--primary-color);
             transform: translateX(-50%);
             transition: width 0.3s ease-in-out;
@@ -102,27 +102,27 @@
             background-color: var(--primary-color);
             color: white;
             padding: 10px 22px;
-            border-radius: 50px; /* Pilule pour la distinction */
+            border-radius: 50px; 
             font-weight: 700;
             transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
             display: flex;
             align-items: center;
             cursor: pointer; 
             border: none;
-            box-shadow: 0 4px 10px rgba(var(--primary-color), 0.4);
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4); /* Utilisé la valeur RGB pour la couleur primaire */
         }
 
         #live-btn:hover {
             background-color: #C0392B; 
             transform: scale(1.05);
-            box-shadow: 0 6px 15px rgba(var(--primary-color), 0.6);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.6);
         }
         
         #live-btn::before {
             content: '⬤';
             font-size: 0.8em;
             margin-right: 8px;
-            color: #FFEB3B; /* Point jaune vif pour le contraste */
+            color: #FFEB3B; 
             animation: blink 1s infinite steps(1);
         }
 
@@ -134,7 +134,7 @@
         /* --- Mise en page (Main) --- */
         .container {
             width: 90%;
-            max-width: 1400px; /* Encore plus large */
+            max-width: 1400px; 
             margin: 30px auto;
         }
         
@@ -182,7 +182,7 @@
             justify-content: center;
             gap: 20px;
             padding: 20px 0;
-            background-color: var(--secondary-color); /* Couleur du header */
+            background-color: var(--secondary-color); 
         }
 
         .platform-btn {
@@ -203,13 +203,12 @@
 
         .platform-btn.active {
             background-color: var(--primary-color);
-            box-shadow: 0 0 15px rgba(var(--primary-color), 0.7);
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.7);
             transform: translateY(-3px);
             font-weight: 700;
         }
         
         .radio-placeholder {
-            /* Style de fond pour la radio, pour ne pas afficher le noir */
             background: linear-gradient(135deg, #1A252F 0%, #34495E 100%) !important;
         }
         
@@ -241,7 +240,7 @@
         
         .news-card {
             background-color: var(--card-bg);
-            border-radius: 12px; /* Coins plus arrondis */
+            border-radius: 12px; 
             overflow: hidden;
             box-shadow: var(--shadow-md);
             margin-bottom: 25px;
@@ -262,7 +261,7 @@
         }
         
         .news-card:hover img {
-            transform: scale(1.05); /* Zoom subtil au survol */
+            transform: scale(1.05); 
         }
 
         .main-news-card img { height: 550px; }
@@ -279,6 +278,53 @@
         }
         
         .card-content p { color: #666; }
+        
+        /* SKELETON SCREEN STYLES (Amélioration) */
+        .skeleton {
+            background-color: #e2e5e7;
+            background-image: linear-gradient(90deg, #e2e5e7 0, #f8f8f8 40%, #e2e5e7 80%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite reverse;
+            border-radius: 4px;
+            display: inline-block;
+            line-height: 1;
+            width: 100%;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-text {
+            height: 1em;
+            margin-bottom: 0.5em;
+        }
+
+        /* Style spécifique pour les Skeletons */
+        .skeleton-main-image {
+            height: 550px;
+        }
+        .skeleton-secondary-image {
+            height: 220px;
+        }
+        .skeleton-title {
+            height: 2em;
+            width: 90%;
+        }
+        .skeleton-line {
+            height: 0.8em;
+            width: 80%;
+        }
+        .skeleton-line-short {
+            width: 40%;
+        }
+        
+        .skeleton-sidebar {
+            height: 20px;
+            width: 70%;
+            margin-bottom: 15px;
+        }
 
         /* --- Sidebar --- */
         .sidebar {
@@ -291,6 +337,7 @@
         .trending-item {
             padding: 18px 0;
             border-bottom: 1px solid #f0f0f0;
+            list-style: none; /* Ajouté pour la sémantique */
         }
         
         .trending-item a {
@@ -316,6 +363,14 @@
             color: white;
             padding: 50px 5%;
             text-align: center;
+        }
+
+        .footer-nav {
+            list-style: none; /* Ajouté pour la sémantique */
+            display: flex; /* Ajouté pour la sémantique */
+            justify-content: center; /* Ajouté pour la sémantique */
+            gap: 30px; /* Ajouté pour la sémantique */
+            margin-bottom: 20px; /* Ajouté pour la sémantique */
         }
 
         .footer-nav a {
@@ -374,22 +429,50 @@
                 <h2>🗞️ À la Une : Kolwezi & RDC</h2>
 
                 <article id="major-news-container" class="news-card main-news-card">
+                    <div class="skeleton skeleton-main-image"></div>
                     <div class="card-content">
-                        <h3>Chargement des données Firebase...</h3>
-                        <p>Veuillez vous assurer que le fichier setup.js est correctement lié et que les données sont disponibles.</p>
+                        <div class="skeleton skeleton-text skeleton-line-short" style="margin-bottom: 20px;"></div>
+                        <h3 class="skeleton skeleton-text skeleton-title"></h3>
+                        <p class="skeleton skeleton-text"></p>
+                        <p class="skeleton skeleton-text skeleton-line"></p>
                     </div>
                 </article>
 
                 <h2 style="margin-top: 50px;">Derniers Articles</h2>
                 <div id="secondary-news-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
-                    <p style="padding: 20px; grid-column: 1 / -1; color: #999;">Tentative de chargement des articles secondaires...</p>
+                    <article class="news-card">
+                        <div class="skeleton skeleton-secondary-image"></div>
+                        <div class="card-content">
+                            <div class="skeleton skeleton-text skeleton-line-short"></div>
+                            <h3 class="skeleton skeleton-text"></h3>
+                            <p class="skeleton skeleton-text skeleton-line"></p>
+                        </div>
+                    </article>
+                    <article class="news-card">
+                        <div class="skeleton skeleton-secondary-image"></div>
+                        <div class="card-content">
+                            <div class="skeleton skeleton-text skeleton-line-short"></div>
+                            <h3 class="skeleton skeleton-text"></h3>
+                            <p class="skeleton skeleton-text skeleton-line"></p>
+                        </div>
+                    </article>
+                    <article class="news-card">
+                        <div class="skeleton skeleton-secondary-image"></div>
+                        <div class="card-content">
+                            <div class="skeleton skeleton-text skeleton-line-short"></div>
+                            <h3 class="skeleton skeleton-text"></h3>
+                            <p class="skeleton skeleton-text skeleton-line"></p>
+                        </div>
+                    </article>
                 </div>
             </section>
             
             <aside class="sidebar">
                 <h2>🔥 Tendances</h2>
                 <ul class="trending-list" id="trending-list">
-                    <li>Chargement des tendances...</li>
+                    <li class="trending-item"><div class="skeleton skeleton-sidebar"></div></li>
+                    <li class="trending-item"><div class="skeleton skeleton-sidebar"></div></li>
+                    <li class="trending-item"><div class="skeleton skeleton-sidebar"></div></li>
                 </ul>
 
                 <h2 style="margin-top: 40px;" id="emissions">📢 Programme Phare</h2>
@@ -449,6 +532,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             // 1. Chargement des données Firebase (dans setup.js)
+            // La fonction loadNews doit être mise à jour pour REMPLACER les skeletons par le contenu réel.
             if (typeof loadNews === 'function') {
                 loadNews(); 
             }
@@ -475,7 +559,6 @@
             });
             
             // Démarrage par défaut de l'affichage du placeholder (sans charger l'iframe)
-            // L'utilisateur doit cliquer pour démarrer le streaming
             document.getElementById('btn-youtube').classList.add('active'); // Sélectionne le bouton YouTube par défaut
         });
     </script>
