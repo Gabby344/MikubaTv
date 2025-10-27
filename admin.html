@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mikuba TV - Administration des Articles</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="setup.js" defer></script> 
+    
+    <style>
+        :root {
+            --primary-color: #E74C3C; --secondary-color: #2C3E50; --accent-color: #3498DB; 
+            --text-color: #333; --light-bg: #F0F2F5; --card-bg: #FFFFFF;
+            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
+        body { background-color: var(--light-bg); padding: 20px; color: var(--text-color); }
+
+        .container {
+            max-width: 900px; margin: 0 auto; background-color: var(--card-bg);
+            padding: 40px; border-radius: 12px; box-shadow: var(--shadow-md);
+        }
+        h1 { font-size: 2.5em; color: var(--secondary-color); margin-bottom: 30px; border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; }
+        
+        /* Formulaire */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 700; color: var(--secondary-color); }
+        input[type="text"], textarea, select {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;
+            font-size: 1em; transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--accent-color); outline: none; }
+        textarea { resize: vertical; min-height: 250px; }
+
+        /* Bouton Publier */
+        #publish-btn {
+            background-color: var(--primary-color); color: white; padding: 15px 30px;
+            border: none; border-radius: 8px; font-weight: 700; font-size: 1.1em;
+            cursor: pointer; transition: background-color 0.3s, transform 0.2s;
+        }
+        #publish-btn:hover { background-color: #C0392B; transform: translateY(-2px); }
+        
+        /* Message de statut */
+        #status-message {
+            margin-top: 20px; padding: 15px; border-radius: 6px; font-weight: 700;
+            display: none; /* Caché par défaut */
+        }
+        .success { background-color: #D4EDDA; color: #155724; border: 1px solid #C3E6CB; }
+        .error { background-color: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🛠️ Administration des Articles</h1>
+        
+        <form id="article-form">
+            <div class="form-group">
+                <label for="title">Titre de l'Article</label>
+                <input type="text" id="title" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="author">Auteur</label>
+                <input type="text" id="author" value="Rédaction Mikuba TV">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Catégorie</label>
+                <select id="category" required>
+                    <option value="Politique">Politique</option>
+                    <option value="Économie">Économie</option>
+                    <option value="Social">Social</option>
+                    <option value="Sport">Sport</option>
+                    <option <option value="Sécurité">Sécurité</option>
+                    <option value="Culture">Culture</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="summary">Résumé (court, pour la page d'accueil)</label>
+                <input type="text" id="summary" required>
+            </div>
+
+            <div class="form-group">
+                <label for="imageUrl">URL de l'Image de Couverture</label>
+                <input type="text" id="imageUrl" required>
+            </div>
+
+            <div class="form-group">
+                <label for="body">Corps de l'Article (Utilisez des balises HTML `<p>`, `<h2>`, etc., si besoin)</label>
+                <textarea id="body" required></textarea>
+            </div>
+
+            <button type="submit" id="publish-btn">Publier l'Article</button>
+        </form>
+
+        <div id="status-message"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('article-form');
+            const statusMessage = document.getElementById('status-message');
+
+            // Vérifier que Firebase est initialisé
+            if (typeof firebase === 'undefined' || !firebase.apps.length) {
+                statusMessage.textContent = "Erreur: Firebase n'est pas initialisé. Vérifiez setup.js.";
+                statusMessage.classList.add('error');
+                statusMessage.style.display = 'block';
+                return;
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('publish-btn');
+                btn.disabled = true;
+                btn.textContent = 'Publication...';
+                
+                statusMessage.style.display = 'none';
+
+                try {
+                    // 1. Récupération des données du formulaire
+                    const newArticleData = {
+                        title: document.getElementById('title').value,
+                        author: document.getElementById('author').value,
+                        category: document.getElementById('category').value,
+                        summary: document.getElementById('summary').value,
+                        imageUrl: document.getElementById('imageUrl').value,
+                        body: document.getElementById('body').value,
+                        // Ajout des métadonnées importantes
+                        date: new Date().toLocaleDateString('fr-FR', {
+                            day: '2-digit', month: '2-digit', year: 'numeric'
+                        }).replace(/\//g, '-'), // Format JJ-MM-AAAA
+                        timestamp: firebase.database.ServerValue.TIMESTAMP 
+                    };
+
+                    // 2. Envoi à Firebase
+                    const database = firebase.database();
+                    await database.ref('articles').push(newArticleData);
+
+                    // 3. Succès
+                    statusMessage.textContent = '✅ Article publié avec succès !';
+                    statusMessage.className = 'success';
+                    statusMessage.style.display = 'block';
+                    form.reset(); // Vider le formulaire après succès
+
+                } catch (error) {
+                    // 4. Erreur
+                    console.error("Erreur de publication:", error);
+                    statusMessage.textContent = `❌ Erreur lors de la publication : ${error.message || 'Problème de connexion'}`;
+                    statusMessage.className = 'error';
+                    statusMessage.style.display = 'block';
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Publier l\'Article';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
