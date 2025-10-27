@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Chargement de l'Article - Mikuba TV</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <script src="setup.js" defer></script> 
+    
+    <style>
+        /* Variables (Identiques) */
+        :root {
+            --primary-color: #E74C3C; --secondary-color: #2C3E50; --accent-color: #3498DB; 
+            --text-color: #333; --light-bg: #F0F2F5; --card-bg: #FFFFFF; --header-bg: #FFFFFF;
+            --font-stack: 'Roboto', sans-serif; --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Base & Réinitialisation */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-stack); line-height: 1.7; color: var(--text-color); background-color: var(--light-bg); }
+        a { text-decoration: none; color: var(--accent-color); transition: color 0.3s; }
+        a:hover { color: var(--primary-color); }
+
+        /* HEADER & FOOTER (Styles de index.html pour cohérence) */
+        .header { background-color: var(--header-bg); border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+        .logo { font-size: 2.4em; font-weight: 900; color: var(--secondary-color); }
+        .logo span { color: var(--primary-color); }
+        .nav-list { list-style: none; display: flex; gap: 35px; }
+        .nav-link { color: var(--secondary-color); font-weight: 500; padding: 8px 0; position: relative; }
+        #live-btn { background-color: var(--primary-color); color: white; padding: 10px 22px; border-radius: 50px; font-weight: 700; cursor: pointer; border: none; }
+
+        .footer { background-color: var(--secondary-color); color: white; padding: 40px 5%; text-align: center; margin-top: 50px; }
+        .footer-nav { list-style: none; display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
+        .footer-nav a { color: #ddd; font-size: 0.95em; }
+
+        /* Contenu de l'Article */
+        .container {
+            width: 90%; max-width: 900px; margin: 40px auto; background-color: var(--card-bg);
+            padding: 40px 50px; border-radius: 12px; box-shadow: var(--shadow-md);
+        }
+        
+        .article-header h1 {
+            font-size: 2.8em; font-weight: 900; color: var(--secondary-color); line-height: 1.1; margin-bottom: 20px;
+        }
+
+        .article-meta { color: #777; font-size: 0.9em; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .article-meta span { margin-right: 15px; font-weight: 500; }
+        .article-meta .category { color: var(--primary-color); font-weight: 700; text-transform: uppercase; }
+
+        .article-cover img { width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 40px; box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); }
+
+        .article-body { font-size: 1.1em; color: var(--text-color); }
+        .article-body p { margin-bottom: 1.5em; }
+        .article-body h2 { font-size: 1.8em; color: var(--secondary-color); margin-top: 2em; margin-bottom: 0.5em; border-left: 5px solid var(--accent-color); padding-left: 15px; }
+        
+        #article-content-container { min-height: 400px; display: flex; flex-direction: column; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .article-header h1 { font-size: 2em; }
+            .container { padding: 20px; margin: 20px auto; }
+            .article-body { font-size: 1em; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <a href="index.html" class="logo" aria-label="Accueil Mikuba TV">Mikuba<span>TV</span></a>
+        <nav role="navigation" aria-label="Menu principal">
+            <ul class="nav-list">
+                <li><a href="index.html" class="nav-link">🏠 Accueil</a></li>
+                <li><a href="index.html#actualites" class="nav-link">📰 Actualités</a></li>
+                <li><a href="index.html#emissions" class="nav-link">🎤 Émissions</a></li>
+            </ul>
+        </nav>
+        <button id="live-btn" role="link">🔴 DIRECT</button>
+    </header>
+
+    <main class="container" id="article-content-container">
+        
+        <p style="text-align: center; margin-top: 100px; font-style: italic;">Chargement de l'article...</p>
+
+    </main>
+
+    <footer class="footer">
+        <ul class="footer-nav">
+            <li><a href="#">Qui sommes-nous ?</a></li>
+            <li><a href="#">Contact Rédaction</a></li>
+            <li><a href="#">Mentions Légales</a></li>
+        </ul>
+        <p style="color: #999; font-size: 0.8em;">&copy; 2025 Mikuba TV. Tous droits réservés.</p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('live-btn').addEventListener('click', () => {
+                window.location.href = 'index.html#live-section';
+            });
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const articleId = urlParams.get('id');
+
+            // Vérifie si la fonction loadArticle (dans setup.js) existe avant de l'appeler
+            if (articleId && typeof loadArticle === 'function') {
+                loadArticle(articleId);
+            } else {
+                // Cette fonction est définie dans setup.js, mais nous mettons une condition ici 
+                // au cas où setup.js n'aurait pas été chargé.
+                if (typeof displayArticleError === 'function') {
+                    displayArticleError("ID d'article manquant ou fonction de chargement non trouvée (vérifiez setup.js).");
+                } else {
+                    document.getElementById('article-content-container').innerHTML = '<p style="text-align: center; margin-top: 50px; color: red;">Erreur Critique : La librairie Firebase n\'a pas pu être chargée.</p>';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
