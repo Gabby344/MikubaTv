@@ -1,7 +1,6 @@
 /**
  * Fichier : setup.js
  * Description : Configuration de Firebase et fonctions de manipulation de la base de données pour Mikuba TV.
- * ATTENTION : Ce code utilise la syntaxe globale (v8/v9) compatible avec les balises script CDN.
  */
 
 // ----------------------------------------------------
@@ -42,6 +41,7 @@ if (typeof firebase === 'undefined') {
 
 /**
  * Publie un nouvel article sur Firebase.
+ * Cette fonction DOIT être déclarée globalement pour que admin.html la trouve.
  */
 function publishArticle(articleData, btn, form, statusMessage) {
     
@@ -96,9 +96,8 @@ function publishArticle(articleData, btn, form, statusMessage) {
 
 // ----------------------------------------------------
 // FONCTIONS UTILITAIRES POUR L'AFFICHAGE (index.html, article.html)
-// (Conservez ces fonctions pour la suite)
 // ----------------------------------------------------
-
+// (Fonctions loadNews, loadArticle, insertNewsCard, displayArticleError inchangées)
 function insertNewsCard(article, articleId, containerId, isMajor = false) {
     const container = document.getElementById(containerId);
     if (!container) return; 
@@ -181,7 +180,7 @@ function loadNews() {
         if (secondaryArticles.length > 0) {
              if (secondaryContainer) secondaryContainer.innerHTML = ''; 
              secondaryArticles.forEach(article => {
-                insertNewsCard(article, article.id, 'secondary-news-container', false);
+                 insertNewsCard(article, article.id, 'secondary-news-container', false);
             });
         } else if (articles.length > 0) {
             if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; font-style: italic; color: #777;">Seul un article principal est disponible.</p>';
