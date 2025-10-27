@@ -1,6 +1,7 @@
 /**
  * Fichier : setup.js
  * Description : Configuration de Firebase et fonctions de manipulation de la base de données pour Mikuba TV.
+ * ATTENTION : Ce code utilise la syntaxe globale (v8/v9) compatible avec les balises script CDN.
  */
 
 // ----------------------------------------------------
@@ -11,17 +12,29 @@ const firebaseConfig = {
     apiKey: "AIzaSyAiMnvIMBqn2VqSQsFpb-Ajx5VORVd0JoA", // ⚠️ UTILISEZ VOTRE VRAIE CLÉ
     authDomain: "danicakakudji.firebaseapp.com",
     projectId: "danicakakudji",
-    storageBucket: "danicakakudji.appspot.com",
+    storageBucket: "danicakakudji.firebasestorage.app", // Mis à jour avec votre valeur
     messagingSenderId: "409346091245",
     appId: "1:409346091245:web:6674becbc81d97c292c4e4"
 };
 
-// Vérification de l'initialisation pour éviter les erreurs
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+// Vérification et Initialisation de l'application Firebase
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        console.log("Firebase initialisé avec succès !");
+    } catch (e) {
+        console.error("Erreur critique lors de l'initialisation de Firebase:", e);
+    }
 }
 
-const database = firebase.database(); 
+// Référence à la base de données Realtime
+const database = typeof firebase !== 'undefined' ? firebase.database() : null; 
+
+// --- DÉBOGAGE CRITIQUE SUPPLÉMENTAIRE ---
+if (typeof firebase === 'undefined') {
+    console.error("CRITIQUE: L'objet 'firebase' n'est pas défini. Vérifiez que les deux balises CDN (firebase-app.js et firebase-database.js) sont correctement chargées DANS admin.html.");
+}
+// ---------------------------------------
 
 // ----------------------------------------------------
 // FONCTION DE PUBLICATION (Pour admin.html)
@@ -29,30 +42,28 @@ const database = firebase.database();
 
 /**
  * Publie un nouvel article sur Firebase.
- * Gère les états de chargement, succès et erreur de l'interface utilisateur.
- * @param {object} articleData - L'objet contenant toutes les données de l'article (avant métadonnées).
- * @param {HTMLElement} btn - Le bouton de publication.
- * @param {HTMLElement} form - Le formulaire HTML.
- * @param {HTMLElement} statusMessage - L'élément d'affichage du statut.
  */
 function publishArticle(articleData, btn, form, statusMessage) {
     
+    if (!database) {
+        // Affiche une erreur si la base de données n'a pas pu être initialisée
+        statusMessage.textContent = '❌ Erreur: Base de données non connectée. Vérifiez les clés API et les CDN.';
+        statusMessage.classList.add('error');
+        statusMessage.style.display = 'block';
+        return;
+    }
+
     // 1. Gestion de l'état UI - Démarrage
     btn.disabled = true;
     btn.textContent = 'Envoi en cours...';
     statusMessage.style.display = 'none';
     statusMessage.classList.remove('success', 'error');
 
-    // 2. Ajout des métadonnées (Date, Timestamp)
-    // Utilisation de ServerValue.TIMESTAMP pour un meilleur tri
+    // 2. Ajout des métadonnées
     articleData.timestamp = firebase.database.ServerValue.TIMESTAMP;
-    
-    // Date formatée pour l'affichage (JJ-MM-AAAA)
     const now = new Date();
     articleData.date = now.toLocaleDateString('fr-FR', {
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
+        day: '2-digit', month: '2-digit', year: 'numeric' 
     }).replace(/\//g, '-'); 
     
     // 3. Écrire dans la collection 'articles'
@@ -68,7 +79,6 @@ function publishArticle(articleData, btn, form, statusMessage) {
             setTimeout(() => {
                 window.location.href = 'index.html'; 
             }, 2000); 
-            
         })
         .catch((error) => {
             // Erreur
@@ -86,12 +96,9 @@ function publishArticle(articleData, btn, form, statusMessage) {
 
 // ----------------------------------------------------
 // FONCTIONS UTILITAIRES POUR L'AFFICHAGE (index.html, article.html)
-// (Inclues ici pour la complétude, non modifiées par rapport à la dernière version validée)
+// (Conservez ces fonctions pour la suite)
 // ----------------------------------------------------
 
-/**
- * Construit et insère une carte d'actualité.
- */
 function insertNewsCard(article, articleId, containerId, isMajor = false) {
     const container = document.getElementById(containerId);
     if (!container) return; 
@@ -119,6 +126,7 @@ function insertNewsCard(article, articleId, containerId, isMajor = false) {
     if (isMajor) {
         container.innerHTML = cardHTML;
         container.setAttribute('onclick', `window.location.href='${link}'`);
+        container.classList.add('major-news-card'); 
     } else {
         const newArticle = document.createElement('article');
         newArticle.classList.add('news-card');
@@ -128,9 +136,6 @@ function insertNewsCard(article, articleId, containerId, isMajor = false) {
     }
 }
 
-/**
- * Affiche un message d'erreur sur la page article.html
- */
 function displayArticleError(message) {
     const container = document.getElementById('article-content-container');
     if (!container) return;
@@ -146,10 +151,8 @@ function displayArticleError(message) {
     if (pageTitle) pageTitle.textContent = "Erreur - Mikuba TV";
 }
 
-/**
- * Charge les actualités pour la page d'accueil (index.html).
- */
 function loadNews() {
+    if (!database) return;
     const newsRef = database.ref('articles').orderByChild('timestamp').limitToLast(10); 
     const majorContainer = document.getElementById('major-news-container');
     const secondaryContainer = document.getElementById('secondary-news-container');
@@ -209,10 +212,12 @@ function loadNews() {
     });
 }
 
-/**
- * Charge un article unique pour la page de détail (article.html).
- */
 function loadArticle(articleId) {
+    if (!database) {
+        displayArticleError("Erreur de connexion à la base de données Firebase.");
+        return;
+    }
+    
     const articleRef = database.ref('articles/' + articleId);
     const container = document.getElementById('article-content-container');
 
