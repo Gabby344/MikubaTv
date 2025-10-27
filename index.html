@@ -1,566 +1,260 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mikuba TV - Le Futur de l'Information à Kolwezi et en RDC</title>
+/**
+ * Fichier : setup.js
+ * Description : Configuration de Firebase et fonctions de manipulation de la base de données pour Mikuba TV.
+ * ATTENTION : Ce code utilise la syntaxe globale (v8/v9) compatible avec les balises script CDN.
+ */
+
+// ----------------------------------------------------
+// ÉTAPE 1 : CONFIGURATION ET INITIALISATION DE FIREBASE
+// ----------------------------------------------------
+// REMPLACER LES VALEURS PAR VOS VRAIES CLÉS !
+const firebaseConfig = {
+    apiKey: "AIzaSyAiMnvIMBqn2VqSQsFpb-Ajx5VORVd0JoA", // ⚠️ UTILISEZ VOTRE VRAIE CLÉ
+    authDomain: "danicakakudji.firebaseapp.com",
+    projectId: "danicakakudji",
+    storageBucket: "danicakakudji.firebasestorage.app", // Mis à jour avec votre valeur
+    messagingSenderId: "409346091245",
+    appId: "1:409346091245:web:6674becbc81d97c292c4e4"
+};
+
+// Vérification et Initialisation de l'application Firebase
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        console.log("Firebase initialisé avec succès !");
+    } catch (e) {
+        console.error("Erreur critique lors de l'initialisation de Firebase:", e);
+    }
+}
+
+// Référence à la base de données Realtime
+const database = typeof firebase !== 'undefined' ? firebase.database() : null; 
+
+// ----------------------------------------------------
+// FONCTION DE PUBLICATION (Pour admin.html)
+// ----------------------------------------------------
+
+/**
+ * Publie un nouvel article sur Firebase.
+ */
+function publishArticle(articleData, btn, form, statusMessage) {
     
-    <meta name="description" content="Toutes les actualités de Kolwezi, Lualaba et de la RDC en direct. Radio et TV Mikuba, votre source d'information fiable.">
+    if (!database) {
+        // Affiche une erreur si la base de données n'a pas pu être initialisée
+        statusMessage.textContent = '❌ Erreur: Base de données non connectée. Vérifiez les clés API et les CDN.';
+        statusMessage.classList.add('error');
+        statusMessage.style.display = 'block';
+        return;
+    }
+
+    // 1. Gestion de l'état UI - Démarrage
+    btn.disabled = true;
+    btn.textContent = 'Envoi en cours...';
+    statusMessage.style.display = 'none';
+    statusMessage.classList.remove('success', 'error');
+
+    // 2. Ajout des métadonnées
+    articleData.timestamp = firebase.database.ServerValue.TIMESTAMP;
+    const now = new Date();
+    articleData.date = now.toLocaleDateString('fr-FR', {
+        day: '2-digit', month: '2-digit', year: 'numeric' 
+    }).replace(/\//g, '-'); 
     
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
-    
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
-    <script src="setup.js" defer></script> 
-    
-    <style>
-        /* Variables de Couleurs Modernes */
-        :root {
-            --primary-color: #E74C3C; /* Rouge Vif pour le Live/Accent */
-            --secondary-color: #2C3E50; /* Bleu Nuit pour l'identité */
-            --accent-color: #3498DB; /* Bleu Clair pour les interactions */
-            --text-color: #333;
-            --light-bg: #F0F2F5; /* Gris très clair, doux */
-            --card-bg: #FFFFFF;
-            --header-bg: #FFFFFF;
-            --font-stack: 'Roboto', sans-serif;
-            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
-            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Reset and Base */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: var(--font-stack);
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--light-bg);
-            overflow-x: hidden;
-        }
-        a { text-decoration: none; color: var(--accent-color); transition: color 0.3s; }
-        a:hover { color: var(--primary-color); }
-
-        /* --- Header / Navigation --- */
-        .header {
-            background-color: var(--header-bg);
-            border-bottom: 1px solid #e0e0e0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky; 
-            top: 0;
-            z-index: 1000;
-        }
-
-        .logo {
-            font-size: 2.4em;
-            font-weight: 900; 
-            color: var(--secondary-color);
-        }
-        
-        .logo span {
-            color: var(--primary-color);
-        }
-
-        .nav-list {
-            list-style: none;
-            display: flex;
-            gap: 35px;
-        }
-
-        .nav-link {
-            color: var(--secondary-color);
-            font-weight: 500;
-            padding: 8px 0;
-            position: relative;
-        }
-        
-        /* Soulignement épais et coloré (Effet moderne) */
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            bottom: -5px;
-            width: 0;
-            height: 3px; 
-            background-color: var(--primary-color);
-            transform: translateX(-50%);
-            transition: width 0.3s ease-in-out;
-        }
-        
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        /* Bouton Live */
-        #live-btn {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px 22px;
-            border-radius: 50px; 
-            font-weight: 700;
-            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
-            display: flex;
-            align-items: center;
-            cursor: pointer; 
-            border: none;
-            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4); /* Utilisé la valeur RGB pour la couleur primaire */
-        }
-
-        #live-btn:hover {
-            background-color: #C0392B; 
-            transform: scale(1.05);
-            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.6);
-        }
-        
-        #live-btn::before {
-            content: '⬤';
-            font-size: 0.8em;
-            margin-right: 8px;
-            color: #FFEB3B; 
-            animation: blink 1s infinite steps(1);
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.1; }
-        }
-
-        /* --- Mise en page (Main) --- */
-        .container {
-            width: 90%;
-            max-width: 1400px; 
-            margin: 30px auto;
-        }
-        
-        /* Lecteur Live */
-        .live-player-section {
-            margin-bottom: 50px;
-            background-color: #000; 
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .player-placeholder {
-            min-height: 550px;
-            background-color: #1A252F;
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #ccc;
-            font-size: 1.5em;
-        }
-        
-        .player-placeholder h2 {
-            color: white;
-            border-bottom: none;
-        }
-        
-        /* Conteneur 16:9 */
-        .video-wrapper {
-            position: relative;
-            width: 100%;
-            padding-top: 56.25%; 
-            background-color: black;
-        }
-
-        .video-wrapper iframe, .video-wrapper .player-placeholder {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
-        }
-
-        /* SÉLECTEUR DE PLATEFORME */
-        .platform-selector {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            padding: 20px 0;
-            background-color: var(--secondary-color); 
-        }
-
-        .platform-btn {
-            background-color: #3C526A;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-
-        .platform-btn:hover {
-            background-color: var(--accent-color);
-        }
-
-        .platform-btn.active {
-            background-color: var(--primary-color);
-            box-shadow: 0 0 15px rgba(231, 76, 60, 0.7);
-            transform: translateY(-3px);
-            font-weight: 700;
-        }
-        
-        .radio-placeholder {
-            background: linear-gradient(135deg, #1A252F 0%, #34495E 100%) !important;
-        }
-        
-        /* Grille de Contenu */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 3fr 1fr; 
-            gap: 50px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            .content-grid { grid-template-columns: 1fr; gap: 30px; }
-            .nav-list { gap: 15px; }
-            .platform-selector { flex-direction: column; align-items: stretch; padding: 10px 20px; }
-            .platform-btn { margin-bottom: 5px; }
-        }
-
-        /* --- News Cards --- */
-        h2 {
-            font-size: 2.2em;
-            font-weight: 700;
-            color: var(--secondary-color);
-            border-bottom: 5px solid var(--primary-color);
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-            text-transform: uppercase;
-        }
-        
-        .news-card {
-            background-color: var(--card-bg);
-            border-radius: 12px; 
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-            margin-bottom: 25px;
-            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s;
-            cursor: pointer;
-        }
-        
-        .news-card:hover {
-            transform: translateY(-10px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .news-card img {
-            width: 100%;
-            height: 220px;
-            object-fit: cover;
-            transition: transform 0.4s;
-        }
-        
-        .news-card:hover img {
-            transform: scale(1.05); 
-        }
-
-        .main-news-card img { height: 550px; }
-
-        .card-content {
-            padding: 30px;
-        }
-
-        .card-content h3 {
-            font-size: 1.8em;
-            line-height: 1.3;
-            margin-bottom: 15px;
-            color: var(--secondary-color);
-        }
-        
-        .card-content p { color: #666; }
-        
-        /* SKELETON SCREEN STYLES (Amélioration) */
-        .skeleton {
-            background-color: #e2e5e7;
-            background-image: linear-gradient(90deg, #e2e5e7 0, #f8f8f8 40%, #e2e5e7 80%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite reverse;
-            border-radius: 4px;
-            display: inline-block;
-            line-height: 1;
-            width: 100%;
-        }
-
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .skeleton-text {
-            height: 1em;
-            margin-bottom: 0.5em;
-        }
-
-        /* Style spécifique pour les Skeletons */
-        .skeleton-main-image {
-            height: 550px;
-        }
-        .skeleton-secondary-image {
-            height: 220px;
-        }
-        .skeleton-title {
-            height: 2em;
-            width: 90%;
-        }
-        .skeleton-line {
-            height: 0.8em;
-            width: 80%;
-        }
-        .skeleton-line-short {
-            width: 40%;
-        }
-        
-        .skeleton-sidebar {
-            height: 20px;
-            width: 70%;
-            margin-bottom: 15px;
-        }
-
-        /* --- Sidebar --- */
-        .sidebar {
-            background-color: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-        }
-
-        .trending-item {
-            padding: 18px 0;
-            border-bottom: 1px solid #f0f0f0;
-            list-style: none; /* Ajouté pour la sémantique */
-        }
-        
-        .trending-item a {
-            font-weight: 500;
-        }
-
-        .program-promo {
-            padding: 20px;
-            background-color: var(--light-bg);
-            border-left: 5px solid var(--accent-color);
-            border-radius: 8px;
-            margin-top: 30px;
-        }
-        
-        .program-promo p:first-child {
-            font-size: 1.2em;
-            color: var(--primary-color);
-        }
-
-        /* --- Footer --- */
-        .footer {
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 50px 5%;
-            text-align: center;
-        }
-
-        .footer-nav {
-            list-style: none; /* Ajouté pour la sémantique */
-            display: flex; /* Ajouté pour la sémantique */
-            justify-content: center; /* Ajouté pour la sémantique */
-            gap: 30px; /* Ajouté pour la sémantique */
-            margin-bottom: 20px; /* Ajouté pour la sémantique */
-        }
-
-        .footer-nav a {
-            color: #ddd;
-            font-size: 0.95em;
-        }
-
-        .footer-nav a:hover {
-            color: var(--accent-color);
-        }
-        
-        .footer p { color: #999; }
-
-    </style>
-</head>
-<body>
-
-    <header class="header">
-        <a href="index.html" class="logo" aria-label="Accueil Mikuba TV">Mikuba<span>TV</span></a>
-        <nav role="navigation" aria-label="Menu principal">
-            <ul class="nav-list">
-                <li><a href="index.html" class="nav-link">🏠 Accueil</a></li>
-                <li><a href="#actualites" class="nav-link">📰 Actualités</a></li>
-                <li><a href="#emissions" class="nav-link">🎤 Émissions</a></li>
-                <li><a href="#multimedia" class="nav-link">🖼️ Multimédia</a></li>
-                <li><a href="#apropos" class="nav-link">ℹ️ À Propos</a></li>
-            </ul>
-        </nav>
-        <button id="live-btn" role="link" aria-label="Accéder au Direct TV et Radio">🔴 DIRECT</button>
-    </header>
-
-    <main class="container">
-        
-        <section class="live-player-section" id="live-section">
-            <div class="player-container">
-                
-                <div class="video-wrapper">
-                    <div id="player-placeholder" class="player-placeholder">
-                        <p style="font-size: 1em; margin-bottom: 10px;">Cliquez sur l'une des plateformes ci-dessous pour démarrer le flux.</p>
-                        <h2 style="font-weight: 400; font-size: 2em; color: #fff;">📺 Mikuba TV: La Télévision du Lualaba</h2>
-                    </div>
-                </div>
-
-                <div class="platform-selector">
-                    <button class="platform-btn" id="btn-youtube" data-platform="youtube">YouTube Live</button>
-                    <button class="platform-btn" id="btn-facebook" data-platform="facebook">Facebook Live</button>
-                    <button class="platform-btn" id="btn-radio" data-platform="radio">Radio Mikuba (Audio)</button>
-                </div>
-                
-            </div>
-        </section>
-
-        <div class="content-grid">
+    // 3. Écrire dans la collection 'articles'
+    database.ref('articles').push(articleData)
+        .then(() => {
+            // Succès
+            console.log("Article publié avec succès !");
+            statusMessage.textContent = '✅ Article publié avec succès ! Redirection vers index.html en cours...';
+            statusMessage.classList.add('success');
+            form.reset(); 
             
-            <section class="main-content" id="actualites">
-                <h2>🗞️ À la Une : Kolwezi & RDC</h2>
-
-                <article id="major-news-container" class="news-card main-news-card">
-                    <div class="skeleton skeleton-main-image"></div>
-                    <div class="card-content">
-                        <div class="skeleton skeleton-text skeleton-line-short" style="margin-bottom: 20px;"></div>
-                        <h3 class="skeleton skeleton-text skeleton-title"></h3>
-                        <p class="skeleton skeleton-text"></p>
-                        <p class="skeleton skeleton-text skeleton-line"></p>
-                    </div>
-                </article>
-
-                <h2 style="margin-top: 50px;">Derniers Articles</h2>
-                <div id="secondary-news-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
-                    <article class="news-card">
-                        <div class="skeleton skeleton-secondary-image"></div>
-                        <div class="card-content">
-                            <div class="skeleton skeleton-text skeleton-line-short"></div>
-                            <h3 class="skeleton skeleton-text"></h3>
-                            <p class="skeleton skeleton-text skeleton-line"></p>
-                        </div>
-                    </article>
-                    <article class="news-card">
-                        <div class="skeleton skeleton-secondary-image"></div>
-                        <div class="card-content">
-                            <div class="skeleton skeleton-text skeleton-line-short"></div>
-                            <h3 class="skeleton skeleton-text"></h3>
-                            <p class="skeleton skeleton-text skeleton-line"></p>
-                        </div>
-                    </article>
-                    <article class="news-card">
-                        <div class="skeleton skeleton-secondary-image"></div>
-                        <div class="card-content">
-                            <div class="skeleton skeleton-text skeleton-line-short"></div>
-                            <h3 class="skeleton skeleton-text"></h3>
-                            <p class="skeleton skeleton-text skeleton-line"></p>
-                        </div>
-                    </article>
-                </div>
-            </section>
-            
-            <aside class="sidebar">
-                <h2>🔥 Tendances</h2>
-                <ul class="trending-list" id="trending-list">
-                    <li class="trending-item"><div class="skeleton skeleton-sidebar"></div></li>
-                    <li class="trending-item"><div class="skeleton skeleton-sidebar"></div></li>
-                    <li class="trending-item"><div class="skeleton skeleton-sidebar"></div></li>
-                </ul>
-
-                <h2 style="margin-top: 40px;" id="emissions">📢 Programme Phare</h2>
-                <div class="program-promo">
-                    <p style="font-weight: 700; color: var(--primary-color); font-size: 1.2em;">"Le Journal de Kolwezi"</p>
-                    <p style="font-size: 0.9em; margin-top: 8px; color: var(--text-color);">Votre rendez-vous quotidien avec l'actualité locale. Tous les soirs à 19h30.</p>
-                </div>
-            </aside>
-        </div>
-    </main>
-
-    <footer class="footer" id="apropos">
-        <ul class="footer-nav">
-            <li><a href="#">Qui sommes-nous ?</a></li>
-            <li><a href="#">Publicité & Annonces</a></li>
-            <li><a href="#">Contact Rédaction</a></li>
-            <li><a href="#">Politique de Confidentialité</a></li>
-        </ul>
-        <p style="color: #999; font-size: 0.8em;">&copy; 2025 Mikuba TV. Tous droits réservés.</p>
-    </footer>
-    
-    <script>
-        // Définition des URL d'intégration (À REMPLACER PAR VOS LIENS RÉELS !)
-        const liveEmbedUrls = {
-            youtube: '<iframe src="VOTRE_LIEN_YOUTUBE_LIVE_EMBED_A_INSERER" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>',
-            facebook: '<iframe src="VOTRE_LIEN_FACEBOOK_LIVE_EMBED_A_INSERER" scrolling="no" allowTransparency="true" allowFullScreen="true"></iframe>',
-            radio: '<iframe src="VOTRE_LIEN_RADIO_STREAMING_AUDIO_A_INSERER" scrolling="no" height="150" width="100%"></iframe>'
-        };
-
-        const playerPlaceholder = document.getElementById('player-placeholder');
-        const platformButtons = document.querySelectorAll('.platform-btn');
-
-        function switchPlayer(platform) {
-            let content = '';
-            
-            // Gestion du style pour la Radio (différent de la vidéo)
-            playerPlaceholder.classList.toggle('radio-placeholder', platform === 'radio');
-
-            if (platform === 'radio') {
-                content = `
-                    <h3 style="color: white; margin-bottom: 20px; font-weight: 400; font-size: 1.5em;">📻 Écoutez Radio Mikuba en Direct</h3>
-                    <div style="width: 80%; max-width: 400px; padding: 20px; background-color: rgba(0,0,0,0.2); border-radius: 8px;">
-                        ${liveEmbedUrls[platform]}
-                    </div>
-                `;
-            } else {
-                content = liveEmbedUrls[platform];
-            }
-
-            // Met à jour le contenu du lecteur
-            playerPlaceholder.innerHTML = content;
-
-            // Gère la classe active sur les boutons
-            platformButtons.forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn-' + platform).classList.add('active');
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Chargement des données Firebase (dans setup.js)
-            // La fonction loadNews doit être mise à jour pour REMPLACER les skeletons par le contenu réel.
-            if (typeof loadNews === 'function') {
-                loadNews(); 
-            }
-
-            // 2. Gestion des boutons de plateforme
-            platformButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    switchPlayer(e.target.dataset.platform);
-                });
-            });
-            
-            // 3. Gestion du bouton DIRECT du Header
-            const liveButton = document.getElementById('live-btn');
-            liveButton.addEventListener('click', (e) => {
-                e.preventDefault(); 
-                
-                // Défilement vers la section Live
-                document.getElementById('live-section').scrollIntoView({ behavior: 'smooth' });
-                
-                // Charge YouTube Live (ou un autre par défaut) lors du premier clic
-                if (!document.querySelector('.platform-btn.active')) {
-                     switchPlayer('youtube');
-                }
-            });
-            
-            // Démarrage par défaut de l'affichage du placeholder (sans charger l'iframe)
-            document.getElementById('btn-youtube').classList.add('active'); // Sélectionne le bouton YouTube par défaut
+            // Redirection après publication pour UX
+            setTimeout(() => {
+                window.location.href = 'index.html'; 
+            }, 2000); 
+        })
+        .catch((error) => {
+            // Erreur
+            console.error("Erreur de publication:", error);
+            statusMessage.textContent = `❌ Erreur lors de la publication : ${error.message || 'Problème de connexion ou de permissions.'}`;
+            statusMessage.classList.add('error');
+        })
+        .finally(() => {
+            // Finalisation
+            statusMessage.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Publier l\'Article';
         });
-    </script>
-</body>
-</html>
+}
+
+// ----------------------------------------------------
+// FONCTIONS UTILITAIRES POUR L'AFFICHAGE (index.html, article.html)
+// (Conservez ces fonctions pour la suite)
+// ----------------------------------------------------
+
+function insertNewsCard(article, articleId, containerId, isMajor = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return; 
+
+    const title = article.title || 'Titre manquant';
+    const summary = article.summary || 'Résumé non disponible.';
+    const category = article.category ? article.category.toUpperCase() : 'GÉNÉRAL';
+    const date = article.date || 'Date inconnue'; 
+    const imageUrl = article.imageUrl && article.imageUrl.startsWith('http') ? article.imageUrl : 'https://via.placeholder.com/900x500/CCCCCC/666666?text=Image+Manquante';
+    const link = `article.html?id=${articleId}`; 
+
+    const imageHeight = isMajor ? '550px' : '220px'; 
+    
+    const cardHTML = `
+        <img src="${imageUrl}" alt="Image de couverture pour : ${title}" style="height: ${imageHeight};" loading="lazy">
+        <div class="card-content">
+            <p style="font-size: 0.8em; color: var(--primary-color); font-weight: bold;">${category}</p>
+            <p style="font-size: 0.75em; color: gray; margin-bottom: 5px;">${date}</p>
+            <h3>${title}</h3>
+            <p>${summary}</p>
+            <span style="display: block; margin-top: 10px; font-weight: 500; color: var(--accent-color);">Lire le reportage →</span>
+        </div>
+    `;
+
+    if (isMajor) {
+        container.innerHTML = cardHTML;
+        container.setAttribute('onclick', `window.location.href='${link}'`);
+        container.classList.add('major-news-card'); 
+    } else {
+        const newArticle = document.createElement('article');
+        newArticle.classList.add('news-card');
+        newArticle.setAttribute('onclick', `window.location.href='${link}'`);
+        newArticle.innerHTML = cardHTML;
+        container.appendChild(newArticle);
+    }
+}
+
+function displayArticleError(message) {
+    const container = document.getElementById('article-content-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div style="text-align: center; margin-top: 50px; color: var(--primary-color);">
+            <h2 style="font-size: 2em; border-bottom: none;">📰 Erreur de Chargement</h2>
+            <p style="font-size: 1.1em; margin-top: 20px;">${message}</p>
+            <p style="margin-top: 30px;"><a href="index.html">Retour à la page d'accueil</a></p>
+        </div>
+    `;
+    const pageTitle = document.querySelector('title');
+    if (pageTitle) pageTitle.textContent = "Erreur - Mikuba TV";
+}
+
+function loadNews() {
+    if (!database) return;
+    const newsRef = database.ref('articles').orderByChild('timestamp').limitToLast(10); 
+    const majorContainer = document.getElementById('major-news-container');
+    const secondaryContainer = document.getElementById('secondary-news-container');
+    const trendingList = document.getElementById('trending-list');
+
+    if (secondaryContainer) secondaryContainer.innerHTML = ''; 
+
+    newsRef.once('value', (snapshot) => {
+        const articles = [];
+        snapshot.forEach((childSnapshot) => {
+            articles.push({ id: childSnapshot.key, ...childSnapshot.val() });
+        });
+
+        articles.reverse(); 
+
+        const majorArticle = articles[0];
+        if (majorArticle) {
+            if (majorContainer) majorContainer.innerHTML = '';
+            insertNewsCard(majorArticle, majorArticle.id, 'major-news-container', true);
+        } else {
+            if (majorContainer) majorContainer.innerHTML = '<div class="card-content"><h3>Pas d\'actualité principale</h3><p>Veuillez ajouter des données via admin.html.</p></div>';
+        }
+        
+        const secondaryArticles = articles.slice(1, 4); 
+        
+        if (secondaryArticles.length > 0) {
+             if (secondaryContainer) secondaryContainer.innerHTML = ''; 
+             secondaryArticles.forEach(article => {
+                insertNewsCard(article, article.id, 'secondary-news-container', false);
+            });
+        } else if (articles.length > 0) {
+            if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; font-style: italic; color: #777;">Seul un article principal est disponible.</p>';
+        } else {
+            if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; font-style: italic; color: #777;">Aucun article disponible.</p>';
+        }
+        
+        if (trendingList) {
+            trendingList.innerHTML = ''; 
+            const trendingArticles = articles.slice(0, Math.min(5, articles.length));
+            
+            if (trendingArticles.length > 0) {
+                trendingArticles.forEach(article => {
+                    const link = `article.html?id=${article.id}`;
+                    trendingList.innerHTML += `
+                        <li class="trending-item">
+                            <a href="${link}" title="${article.title}">${article.title}</a>
+                        </li>
+                    `;
+                });
+            } else {
+                 trendingList.innerHTML = '<li>Aucun article récent à afficher.</li>';
+            }
+        }
+
+    }, (error) => {
+        console.error("Erreur de connexion Firebase:", error);
+    });
+}
+
+function loadArticle(articleId) {
+    if (!database) {
+        displayArticleError("Erreur de connexion à la base de données Firebase.");
+        return;
+    }
+    
+    const articleRef = database.ref('articles/' + articleId);
+    const container = document.getElementById('article-content-container');
+
+    articleRef.once('value', (snapshot) => {
+        const article = snapshot.val();
+        
+        if (!article) {
+            displayArticleError(`Article avec l'ID '${articleId}' introuvable dans la base de données.`);
+            return;
+        }
+        
+        const pageTitle = document.querySelector('title');
+        if (pageTitle) pageTitle.textContent = `${article.title} - Mikuba TV`;
+
+        const articleContent = article.body || '<p>Le corps complet de l\'article n\'est pas disponible. Veuillez vérifier les données dans Firebase.</p>';
+
+        const articleHTML = `
+            <div class="article-header">
+                <h1>${article.title}</h1>
+                <div class="article-meta">
+                    <span class="category">${article.category || 'Général'}</span>
+                    <span>Par ${article.author || 'Rédaction Mikuba TV'}</span>
+                    <span>Publié le ${article.date || 'Date inconnue'}</span>
+                </div>
+            </div>
+            
+            <figure class="article-cover">
+                <img src="${article.imageUrl || 'https://via.placeholder.com/900x500/CCCCCC/666666?text=Image+Manquante'}" alt="Image de couverture pour ${article.title}">
+            </figure>
+            
+            <div class="article-body">
+                ${articleContent}
+            </div>
+        `;
+        
+        if (container) {
+            const statusIndicator = container.querySelector('[role="status"]');
+            if (statusIndicator) statusIndicator.remove(); 
+            container.innerHTML = articleHTML;
+        }
+        
+    }, (error) => {
+        console.error("Erreur de chargement Firebase:", error);
+        displayArticleError("Erreur de connexion à la base de données Firebase.");
+    });
+}
