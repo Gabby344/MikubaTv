@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Chargement de l'Article - Mikuba TV</title>
     
+    <meta name="description" content="Lecture complète de l'article sur Mikuba TV.">
+    
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     
@@ -19,6 +21,9 @@
             --primary-color: #E74C3C; --secondary-color: #2C3E50; --accent-color: #3498DB; 
             --text-color: #333; --light-bg: #F0F2F5; --card-bg: #FFFFFF; --header-bg: #FFFFFF;
             --font-stack: 'Roboto', sans-serif; --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+            /* Couleurs Skeleton */
+            --skeleton-color: #e2e5e7;
+            --skeleton-highlight: #f8f8f8;
         }
 
         /* Base & Réinitialisation */
@@ -27,7 +32,7 @@
         a { text-decoration: none; color: var(--accent-color); transition: color 0.3s; }
         a:hover { color: var(--primary-color); }
 
-        /* HEADER & FOOTER (Styles de index.html pour cohérence) */
+        /* HEADER & FOOTER */
         .header { background-color: var(--header-bg); border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
         .logo { font-size: 2.4em; font-weight: 900; color: var(--secondary-color); }
         .logo span { color: var(--primary-color); }
@@ -45,6 +50,12 @@
             padding: 40px 50px; border-radius: 12px; box-shadow: var(--shadow-md);
         }
         
+        #article-content-container { 
+            min-height: 400px; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
         .article-header h1 {
             font-size: 2.8em; font-weight: 900; color: var(--secondary-color); line-height: 1.1; margin-bottom: 20px;
         }
@@ -53,19 +64,49 @@
         .article-meta span { margin-right: 15px; font-weight: 500; }
         .article-meta .category { color: var(--primary-color); font-weight: 700; text-transform: uppercase; }
 
-        .article-cover img { width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 40px; box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); }
+        .article-cover img { 
+            width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 40px; box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); 
+        }
 
+        /* Styles pour la lisibilité du corps de l'article */
         .article-body { font-size: 1.1em; color: var(--text-color); }
-        .article-body p { margin-bottom: 1.5em; }
+        .article-body p { margin-bottom: 1.5em; text-align: justify; }
         .article-body h2 { font-size: 1.8em; color: var(--secondary-color); margin-top: 2em; margin-bottom: 0.5em; border-left: 5px solid var(--accent-color); padding-left: 15px; }
-        
-        #article-content-container { min-height: 400px; display: flex; flex-direction: column; }
+        .article-body ul, .article-body ol { margin-left: 20px; margin-bottom: 1.5em; }
+
+        /* ---------------------------------- */
+        /* SKELETON SCREEN STYLES (Amélioration) */
+        /* ---------------------------------- */
+        .skeleton {
+            background-color: var(--skeleton-color);
+            background-image: linear-gradient(90deg, var(--skeleton-color) 0, var(--skeleton-highlight) 40%, var(--skeleton-color) 80%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite reverse;
+            border-radius: 4px;
+            display: inline-block;
+            line-height: 1;
+            width: 100%;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Styles spécifiques au détail d'article */
+        .skeleton-title-big { height: 40px; width: 85%; margin-bottom: 15px; }
+        .skeleton-meta-line { height: 15px; width: 50%; margin-bottom: 20px; }
+        .skeleton-cover { height: 450px; margin-bottom: 40px; }
+        .skeleton-text-line { height: 18px; margin-bottom: 10px; }
+        .skeleton-text-line-short { width: 90%; }
+        .skeleton-text-line-tiny { width: 70%; }
         
         /* Responsive */
         @media (max-width: 768px) {
             .article-header h1 { font-size: 2em; }
             .container { padding: 20px; margin: 20px auto; }
             .article-body { font-size: 1em; }
+            .skeleton-cover { height: 250px; } /* Plus petit sur mobile */
         }
     </style>
 </head>
@@ -84,8 +125,24 @@
     </header>
 
     <main class="container" id="article-content-container">
+        <div class="article-header skeleton-loader">
+            <div class="skeleton skeleton-title-big"></div>
+            <div class="skeleton skeleton-meta-line"></div>
+        </div>
         
-        <p style="text-align: center; margin-top: 100px; font-style: italic;">Chargement de l'article...</p>
+        <figure class="article-cover skeleton-loader">
+            <div class="skeleton skeleton-cover"></div>
+        </figure>
+        
+        <div class="article-body skeleton-loader">
+            <div class="skeleton skeleton-text-line"></div>
+            <div class="skeleton skeleton-text-line"></div>
+            <div class="skeleton skeleton-text-line skeleton-text-line-short"></div>
+            <br>
+            <div class="skeleton skeleton-text-line"></div>
+            <div class="skeleton skeleton-text-line skeleton-text-line-tiny"></div>
+            <div class="skeleton skeleton-text-line"></div>
+        </div>
 
     </main>
 
@@ -107,16 +164,19 @@
             const urlParams = new URLSearchParams(window.location.search);
             const articleId = urlParams.get('id');
 
-            // Vérifie si la fonction loadArticle (dans setup.js) existe avant de l'appeler
+            // Vérifie si la fonction loadArticle (dans setup.js) existe
             if (articleId && typeof loadArticle === 'function') {
                 loadArticle(articleId);
             } else {
-                // Cette fonction est définie dans setup.js, mais nous mettons une condition ici 
-                // au cas où setup.js n'aurait pas été chargé.
+                // Afficher l'erreur si l'ID est manquant ou la fonction non trouvée
+                const container = document.getElementById('article-content-container');
                 if (typeof displayArticleError === 'function') {
-                    displayArticleError("ID d'article manquant ou fonction de chargement non trouvée (vérifiez setup.js).");
+                    // Supprime les skeletons pour afficher le message d'erreur clair
+                    container.innerHTML = ''; 
+                    displayArticleError("ID d'article manquant dans l'adresse (URL).");
                 } else {
-                    document.getElementById('article-content-container').innerHTML = '<p style="text-align: center; margin-top: 50px; color: red;">Erreur Critique : La librairie Firebase n\'a pas pu être chargée.</p>';
+                    // Message de secours
+                    container.innerHTML = '<p style="text-align: center; margin-top: 50px; color: red;">Erreur Critique : ID non trouvé ou librairie de chargement manquante.</p>';
                 }
             }
         });
