@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mikuba TV - L'Actualité du Lualaba et de la RDC en Direct</title>
+    <title>Mikuba TV - Le Futur de l'Information à Kolwezi et en RDC</title>
     
     <meta name="description" content="Toutes les actualités de Kolwezi, Lualaba et de la RDC en direct. Radio et TV Mikuba, votre source d'information fiable.">
-    <meta name="keywords" content="Mikuba TV, Kolwezi, Lualaba, RDC, Actualité, Radio, Télévision, Live">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
     
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     
@@ -16,15 +17,18 @@
     <script src="setup.js" defer></script> 
     
     <style>
-        /* Variables améliorées pour un design plus moderne */
+        /* Variables de Couleurs Modernes */
         :root {
-            --primary-color: #E74C3C; /* Rouge vif pour l'action (plus moderne que C0392B) */
-            --secondary-color: #2C3E50; /* Bleu Nuit pour le fond */
-            --accent-color: #3498DB; /* Bleu clair pour les liens/hover */
-            --text-color: #444;
-            --light-bg: #F9F9F9;
+            --primary-color: #E74C3C; /* Rouge Vif pour le Live/Accent */
+            --secondary-color: #2C3E50; /* Bleu Nuit pour l'identité */
+            --accent-color: #3498DB; /* Bleu Clair pour les interactions */
+            --text-color: #333;
+            --light-bg: #F0F2F5; /* Gris très clair, doux */
+            --card-bg: #FFFFFF;
             --header-bg: #FFFFFF;
-            --font-stack: 'Roboto', 'Arial', sans-serif;
+            --font-stack: 'Roboto', sans-serif;
+            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
         /* Reset and Base */
@@ -34,28 +38,28 @@
             line-height: 1.6;
             color: var(--text-color);
             background-color: var(--light-bg);
-            overflow-x: hidden; /* Empêche les barres de défilement horizontales non désirées */
+            overflow-x: hidden;
         }
-        a { text-decoration: none; color: var(--accent-color); }
-        a:hover { text-decoration: underline; }
+        a { text-decoration: none; color: var(--accent-color); transition: color 0.3s; }
+        a:hover { color: var(--primary-color); }
 
         /* --- Header / Navigation --- */
         .header {
             background-color: var(--header-bg);
-            border-bottom: 1px solid #eee;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             padding: 15px 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky; /* Barre de navigation qui suit au scroll */
+            position: sticky; 
             top: 0;
             z-index: 1000;
         }
 
         .logo {
-            font-size: 2.2em;
-            font-weight: 700; /* Plus gras */
+            font-size: 2.4em;
+            font-weight: 900; /* Très Gras */
             color: var(--secondary-color);
         }
         
@@ -66,25 +70,26 @@
         .nav-list {
             list-style: none;
             display: flex;
-            gap: 30px;
+            gap: 35px;
         }
 
         .nav-link {
             color: var(--secondary-color);
             font-weight: 500;
-            padding: 5px 0;
+            padding: 8px 0;
             position: relative;
         }
         
-        /* Soulignement dynamique */
+        /* Soulignement épais et coloré (Effet moderne) */
         .nav-link::after {
             content: '';
             position: absolute;
-            left: 0;
+            left: 50%;
             bottom: -5px;
             width: 0;
-            height: 2px;
+            height: 3px; /* Plus épais */
             background-color: var(--primary-color);
+            transform: translateX(-50%);
             transition: width 0.3s ease-in-out;
         }
         
@@ -96,205 +101,233 @@
         #live-btn {
             background-color: var(--primary-color);
             color: white;
-            padding: 8px 18px;
-            border-radius: 4px;
+            padding: 10px 22px;
+            border-radius: 50px; /* Pilule pour la distinction */
             font-weight: 700;
-            transition: background-color 0.3s, transform 0.2s;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
             display: flex;
             align-items: center;
             cursor: pointer; 
             border: none;
+            box-shadow: 0 4px 10px rgba(var(--primary-color), 0.4);
         }
 
         #live-btn:hover {
             background-color: #C0392B; 
-            transform: translateY(-2px);
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(var(--primary-color), 0.6);
         }
         
         #live-btn::before {
-            content: '⬤'; /* Cercle solide pour un meilleur look */
+            content: '⬤';
             font-size: 0.8em;
             margin-right: 8px;
-            color: white;
+            color: #FFEB3B; /* Point jaune vif pour le contraste */
             animation: blink 1s infinite steps(1);
         }
 
         @keyframes blink {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
+            50% { opacity: 0.1; }
         }
 
-        /* --- Mise en page de la Page (Main) --- */
+        /* --- Mise en page (Main) --- */
         .container {
             width: 90%;
-            max-width: 1300px;
+            max-width: 1400px; /* Encore plus large */
             margin: 30px auto;
         }
         
         /* Lecteur Live */
         .live-player-section {
-            margin-bottom: 40px;
-            background-color: #000; /* Fond noir pour le lecteur */
-            border-radius: 12px;
+            margin-bottom: 50px;
+            background-color: #000; 
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow-lg);
         }
         
         .player-placeholder {
             min-height: 550px;
+            background-color: #1A252F;
+            border-radius: 15px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white;
-            background-color: rgba(0, 0, 0, 0.7);
+            color: #ccc;
             font-size: 1.5em;
+        }
+        
+        .player-placeholder h2 {
+            color: white;
+            border-bottom: none;
+        }
+        
+        /* Conteneur 16:9 */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; 
+            background-color: black;
+        }
+
+        .video-wrapper iframe, .video-wrapper .player-placeholder {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
+        }
+
+        /* SÉLECTEUR DE PLATEFORME */
+        .platform-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px 0;
+            background-color: var(--secondary-color); /* Couleur du header */
+        }
+
+        .platform-btn {
+            background-color: #3C526A;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .platform-btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        .platform-btn.active {
+            background-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(var(--primary-color), 0.7);
+            transform: translateY(-3px);
+            font-weight: 700;
+        }
+        
+        .radio-placeholder {
+            /* Style de fond pour la radio, pour ne pas afficher le noir */
+            background: linear-gradient(135deg, #1A252F 0%, #34495E 100%) !important;
         }
         
         /* Grille de Contenu */
         .content-grid {
             display: grid;
             grid-template-columns: 3fr 1fr; 
-            gap: 40px;
+            gap: 50px;
         }
 
         /* Responsive Design */
         @media (max-width: 1024px) {
-            .content-grid { grid-template-columns: 2fr 1fr; gap: 20px; }
-            .main-news-card img { height: 400px; }
-        }
-        
-        @media (max-width: 768px) {
-            .nav-list { display: none; }
-            .content-grid { grid-template-columns: 1fr; }
-            .player-placeholder { min-height: 300px; }
-            .main-news-card img { height: 300px; }
-            h2 { font-size: 1.6em; }
+            .content-grid { grid-template-columns: 1fr; gap: 30px; }
+            .nav-list { gap: 15px; }
+            .platform-selector { flex-direction: column; align-items: stretch; padding: 10px 20px; }
+            .platform-btn { margin-bottom: 5px; }
         }
 
         /* --- News Cards --- */
         h2 {
-            font-size: 2em;
+            font-size: 2.2em;
+            font-weight: 700;
             color: var(--secondary-color);
-            border-bottom: 4px solid var(--primary-color);
-            padding-bottom: 8px;
-            margin-bottom: 25px;
+            border-bottom: 5px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
             text-transform: uppercase;
         }
         
         .news-card {
-            background-color: white;
-            border-radius: 10px;
+            background-color: var(--card-bg);
+            border-radius: 12px; /* Coins plus arrondis */
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 25px;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s;
             cursor: pointer;
         }
         
         .news-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
         }
 
         .news-card img {
             width: 100%;
-            height: 200px;
+            height: 220px;
             object-fit: cover;
-            transition: opacity 0.3s;
+            transition: transform 0.4s;
         }
         
         .news-card:hover img {
-            opacity: 0.9;
+            transform: scale(1.05); /* Zoom subtil au survol */
         }
 
-        .main-news-card img { height: 500px; }
+        .main-news-card img { height: 550px; }
 
         .card-content {
-            padding: 25px;
+            padding: 30px;
         }
 
         .card-content h3 {
-            font-size: 1.6em;
-            line-height: 1.2;
-            margin-bottom: 10px;
+            font-size: 1.8em;
+            line-height: 1.3;
+            margin-bottom: 15px;
             color: var(--secondary-color);
         }
         
-        .card-content p:last-of-type { /* Style pour le résumé */
-            color: var(--text-color);
-        }
-        
-        .card-content a {
-            color: var(--primary-color); 
-            font-weight: 700; 
-            margin-top: 15px; 
-            display: inline-block;
-            text-decoration: none;
-        }
+        .card-content p { color: #666; }
 
         /* --- Sidebar --- */
         .sidebar {
-            background-color: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
         }
 
         .trending-item {
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
-            list-style: none; /* Enlève la puce par défaut */
+            padding: 18px 0;
+            border-bottom: 1px solid #f0f0f0;
         }
-        
-        .trending-item:last-child { border-bottom: none; }
         
         .trending-item a {
-            font-size: 1.05em;
-            color: var(--secondary-color);
-            display: block;
-            transition: color 0.2s;
-        }
-        
-        .trending-item a:hover {
-            color: var(--accent-color);
-            text-decoration: none;
+            font-weight: 500;
         }
 
         .program-promo {
-            padding: 15px;
+            padding: 20px;
             background-color: var(--light-bg);
-            border-left: 4px solid var(--accent-color);
-            border-radius: 4px;
-            margin-top: 20px;
+            border-left: 5px solid var(--accent-color);
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .program-promo p:first-child {
+            font-size: 1.2em;
+            color: var(--primary-color);
         }
 
         /* --- Footer --- */
         .footer {
             background-color: var(--secondary-color);
             color: white;
-            padding: 40px 5%;
+            padding: 50px 5%;
             text-align: center;
-            margin-top: 40px;
-        }
-
-        .footer-nav {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 20px;
         }
 
         .footer-nav a {
-            color: #ccc;
-            font-size: 0.9em;
+            color: #ddd;
+            font-size: 0.95em;
         }
 
         .footer-nav a:hover {
-            color: var(--primary-color);
-            text-decoration: underline;
+            color: var(--accent-color);
         }
+        
+        .footer p { color: #999; }
 
     </style>
 </head>
@@ -317,10 +350,22 @@
     <main class="container">
         
         <section class="live-player-section" id="live-section">
-            <div class="player-placeholder">
-                <p>En attente du flux live...</p>
-                <h2 style="font-weight: 300;">📺 Le Direct de Mikuba TV démarre ici</h2>
+            <div class="player-container">
+                
+                <div class="video-wrapper">
+                    <div id="player-placeholder" class="player-placeholder">
+                        <p style="font-size: 1em; margin-bottom: 10px;">Cliquez sur l'une des plateformes ci-dessous pour démarrer le flux.</p>
+                        <h2 style="font-weight: 400; font-size: 2em; color: #fff;">📺 Mikuba TV: La Télévision du Lualaba</h2>
+                    </div>
                 </div>
+
+                <div class="platform-selector">
+                    <button class="platform-btn" id="btn-youtube" data-platform="youtube">YouTube Live</button>
+                    <button class="platform-btn" id="btn-facebook" data-platform="facebook">Facebook Live</button>
+                    <button class="platform-btn" id="btn-radio" data-platform="radio">Radio Mikuba (Audio)</button>
+                </div>
+                
+            </div>
         </section>
 
         <div class="content-grid">
@@ -330,14 +375,14 @@
 
                 <article id="major-news-container" class="news-card main-news-card">
                     <div class="card-content">
-                        <h3>Chargement en cours...</h3>
-                        <p>Tentative de connexion à Firebase...</p>
+                        <h3>Chargement des données Firebase...</h3>
+                        <p>Veuillez vous assurer que le fichier setup.js est correctement lié et que les données sont disponibles.</p>
                     </div>
                 </article>
 
-                <h2 style="margin-top: 40px;">Derniers Articles</h2>
-                <div id="secondary-news-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                    <p style="padding: 20px; grid-column: 1 / -1;">Veuillez patienter pendant le chargement des données...</p>
+                <h2 style="margin-top: 50px;">Derniers Articles</h2>
+                <div id="secondary-news-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
+                    <p style="padding: 20px; grid-column: 1 / -1; color: #999;">Tentative de chargement des articles secondaires...</p>
                 </div>
             </section>
             
@@ -347,10 +392,10 @@
                     <li>Chargement des tendances...</li>
                 </ul>
 
-                <h2 style="margin-top: 30px;" id="emissions">📢 Programme Phare</h2>
+                <h2 style="margin-top: 40px;" id="emissions">📢 Programme Phare</h2>
                 <div class="program-promo">
-                    <p style="font-weight: bold; color: var(--primary-color); font-size: 1.1em;">"Le Journal de Kolwezi"</p>
-                    <p style="font-size: 0.9em; margin-top: 5px; color: var(--text-color);">Tous les jours à 19h30. Ne manquez pas les nouvelles locales.</p>
+                    <p style="font-weight: 700; color: var(--primary-color); font-size: 1.2em;">"Le Journal de Kolwezi"</p>
+                    <p style="font-size: 0.9em; margin-top: 8px; color: var(--text-color);">Votre rendez-vous quotidien avec l'actualité locale. Tous les soirs à 19h30.</p>
                 </div>
             </aside>
         </div>
@@ -359,36 +404,79 @@
     <footer class="footer" id="apropos">
         <ul class="footer-nav">
             <li><a href="#">Qui sommes-nous ?</a></li>
-            <li><a href="#">Publicité</a></li>
-            <li><a href="#">Contact</a></li>
-            <li><a href="#">Mentions Légales</a></li>
+            <li><a href="#">Publicité & Annonces</a></li>
+            <li><a href="#">Contact Rédaction</a></li>
+            <li><a href="#">Politique de Confidentialité</a></li>
         </ul>
-        <p style="color: #aaa; font-size: 0.8em;">&copy; 2025 Mikuba TV. Tous droits réservés.</p>
-        <p style="color: #777; font-size: 0.7em; margin-top: 5px;">Propulsé par la puissance dynamique de Firebase.</p>
+        <p style="color: #999; font-size: 0.8em;">&copy; 2025 Mikuba TV. Tous droits réservés.</p>
     </footer>
     
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Appel de la fonction de chargement DANS le fichier setup.js
-            // La fonction 'loadNews()' est rendue disponible par <script src="setup.js" defer></script>
-            if (typeof loadNews === 'function') {
-                loadNews(); 
+        // Définition des URL d'intégration (À REMPLACER PAR VOS LIENS RÉELS !)
+        const liveEmbedUrls = {
+            youtube: '<iframe src="VOTRE_LIEN_YOUTUBE_LIVE_EMBED_A_INSERER" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>',
+            facebook: '<iframe src="VOTRE_LIEN_FACEBOOK_LIVE_EMBED_A_INSERER" scrolling="no" allowTransparency="true" allowFullScreen="true"></iframe>',
+            radio: '<iframe src="VOTRE_LIEN_RADIO_STREAMING_AUDIO_A_INSERER" scrolling="no" height="150" width="100%"></iframe>'
+        };
+
+        const playerPlaceholder = document.getElementById('player-placeholder');
+        const platformButtons = document.querySelectorAll('.platform-btn');
+
+        function switchPlayer(platform) {
+            let content = '';
+            
+            // Gestion du style pour la Radio (différent de la vidéo)
+            playerPlaceholder.classList.toggle('radio-placeholder', platform === 'radio');
+
+            if (platform === 'radio') {
+                content = `
+                    <h3 style="color: white; margin-bottom: 20px; font-weight: 400; font-size: 1.5em;">📻 Écoutez Radio Mikuba en Direct</h3>
+                    <div style="width: 80%; max-width: 400px; padding: 20px; background-color: rgba(0,0,0,0.2); border-radius: 8px;">
+                        ${liveEmbedUrls[platform]}
+                    </div>
+                `;
             } else {
-                console.error("Erreur: La fonction loadNews n'est pas définie. Vérifiez que setup.js est chargé correctement.");
+                content = liveEmbedUrls[platform];
             }
 
-            // Gérer le bouton Direct
+            // Met à jour le contenu du lecteur
+            playerPlaceholder.innerHTML = content;
+
+            // Gère la classe active sur les boutons
+            platformButtons.forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + platform).classList.add('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Chargement des données Firebase (dans setup.js)
+            if (typeof loadNews === 'function') {
+                loadNews(); 
+            }
+
+            // 2. Gestion des boutons de plateforme
+            platformButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    switchPlayer(e.target.dataset.platform);
+                });
+            });
+            
+            // 3. Gestion du bouton DIRECT du Header
             const liveButton = document.getElementById('live-btn');
             liveButton.addEventListener('click', (e) => {
                 e.preventDefault(); 
                 
-                // Mettre le focus sur la section du lecteur (pour le défilement)
+                // Défilement vers la section Live
                 document.getElementById('live-section').scrollIntoView({ behavior: 'smooth' });
                 
-                // Ici, vous insérerez la vraie logique pour démarrer le lecteur
-                console.log("Flux Live en cours de lancement...");
-                // EXEMPLE: document.getElementById('player-placeholder').innerHTML = '<iframe src="votre-flux-rtmp.html"></iframe>';
+                // Charge YouTube Live (ou un autre par défaut) lors du premier clic
+                if (!document.querySelector('.platform-btn.active')) {
+                     switchPlayer('youtube');
+                }
             });
+            
+            // Démarrage par défaut de l'affichage du placeholder (sans charger l'iframe)
+            // L'utilisateur doit cliquer pour démarrer le streaming
+            document.getElementById('btn-youtube').classList.add('active'); // Sélectionne le bouton YouTube par défaut
         });
     </script>
 </body>
