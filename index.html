@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mikuba TV - L'Actualité du Lualaba et de la RDC en Direct</title>
+    
+    <meta name="description" content="Toutes les actualités de Kolwezi, Lualaba et de la RDC en direct. Radio et TV Mikuba, votre source d'information fiable.">
+    <meta name="keywords" content="Mikuba TV, Kolwezi, Lualaba, RDC, Actualité, Radio, Télévision, Live">
+    
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <script src="setup.js" defer></script> 
+    
+    <style>
+        /* Variables améliorées pour un design plus moderne */
+        :root {
+            --primary-color: #E74C3C; /* Rouge vif pour l'action (plus moderne que C0392B) */
+            --secondary-color: #2C3E50; /* Bleu Nuit pour le fond */
+            --accent-color: #3498DB; /* Bleu clair pour les liens/hover */
+            --text-color: #444;
+            --light-bg: #F9F9F9;
+            --header-bg: #FFFFFF;
+            --font-stack: 'Roboto', 'Arial', sans-serif;
+        }
+
+        /* Reset and Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-stack);
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--light-bg);
+            overflow-x: hidden; /* Empêche les barres de défilement horizontales non désirées */
+        }
+        a { text-decoration: none; color: var(--accent-color); }
+        a:hover { text-decoration: underline; }
+
+        /* --- Header / Navigation --- */
+        .header {
+            background-color: var(--header-bg);
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; /* Barre de navigation qui suit au scroll */
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 2.2em;
+            font-weight: 700; /* Plus gras */
+            color: var(--secondary-color);
+        }
+        
+        .logo span {
+            color: var(--primary-color);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: var(--secondary-color);
+            font-weight: 500;
+            padding: 5px 0;
+            position: relative;
+        }
+        
+        /* Soulignement dynamique */
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -5px;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease-in-out;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Bouton Live */
+        #live-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 4px;
+            font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            cursor: pointer; 
+            border: none;
+        }
+
+        #live-btn:hover {
+            background-color: #C0392B; 
+            transform: translateY(-2px);
+        }
+        
+        #live-btn::before {
+            content: '⬤'; /* Cercle solide pour un meilleur look */
+            font-size: 0.8em;
+            margin-right: 8px;
+            color: white;
+            animation: blink 1s infinite steps(1);
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        /* --- Mise en page de la Page (Main) --- */
+        .container {
+            width: 90%;
+            max-width: 1300px;
+            margin: 30px auto;
+        }
+        
+        /* Lecteur Live */
+        .live-player-section {
+            margin-bottom: 40px;
+            background-color: #000; /* Fond noir pour le lecteur */
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .player-placeholder {
+            min-height: 550px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            font-size: 1.5em;
+        }
+        
+        /* Grille de Contenu */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 3fr 1fr; 
+            gap: 40px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .content-grid { grid-template-columns: 2fr 1fr; gap: 20px; }
+            .main-news-card img { height: 400px; }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-list { display: none; }
+            .content-grid { grid-template-columns: 1fr; }
+            .player-placeholder { min-height: 300px; }
+            .main-news-card img { height: 300px; }
+            h2 { font-size: 1.6em; }
+        }
+
+        /* --- News Cards --- */
+        h2 {
+            font-size: 2em;
+            color: var(--secondary-color);
+            border-bottom: 4px solid var(--primary-color);
+            padding-bottom: 8px;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+        }
+        
+        .news-card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .news-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+        }
+
+        .news-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: opacity 0.3s;
+        }
+        
+        .news-card:hover img {
+            opacity: 0.9;
+        }
+
+        .main-news-card img { height: 500px; }
+
+        .card-content {
+            padding: 25px;
+        }
+
+        .card-content h3 {
+            font-size: 1.6em;
+            line-height: 1.2;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+        
+        .card-content p:last-of-type { /* Style pour le résumé */
+            color: var(--text-color);
+        }
+        
+        .card-content a {
+            color: var(--primary-color); 
+            font-weight: 700; 
+            margin-top: 15px; 
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .trending-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+            list-style: none; /* Enlève la puce par défaut */
+        }
+        
+        .trending-item:last-child { border-bottom: none; }
+        
+        .trending-item a {
+            font-size: 1.05em;
+            color: var(--secondary-color);
+            display: block;
+            transition: color 0.2s;
+        }
+        
+        .trending-item a:hover {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .program-promo {
+            padding: 15px;
+            background-color: var(--light-bg);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+
+        /* --- Footer --- */
+        .footer {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 40px 5%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .footer-nav {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .footer-nav a {
+            color: #ccc;
+            font-size: 0.9em;
+        }
+
+        .footer-nav a:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <a href="index.html" class="logo" aria-label="Accueil Mikuba TV">Mikuba<span>TV</span></a>
+        <nav role="navigation" aria-label="Menu principal">
+            <ul class="nav-list">
+                <li><a href="index.html" class="nav-link">🏠 Accueil</a></li>
+                <li><a href="#actualites" class="nav-link">📰 Actualités</a></li>
+                <li><a href="#emissions" class="nav-link">🎤 Émissions</a></li>
+                <li><a href="#multimedia" class="nav-link">🖼️ Multimédia</a></li>
+                <li><a href="#apropos" class="nav-link">ℹ️ À Propos</a></li>
+            </ul>
+        </nav>
+        <button id="live-btn" role="link" aria-label="Accéder au Direct TV et Radio">🔴 DIRECT</button>
+    </header>
+
+    <main class="container">
+        
+        <section class="live-player-section" id="live-section">
+            <div class="player-placeholder">
+                <p>En attente du flux live...</p>
+                <h2 style="font-weight: 300;">📺 Le Direct de Mikuba TV démarre ici</h2>
+                </div>
+        </section>
+
+        <div class="content-grid">
+            
+            <section class="main-content" id="actualites">
+                <h2>🗞️ À la Une : Kolwezi & RDC</h2>
+
+                <article id="major-news-container" class="news-card main-news-card">
+                    <div class="card-content">
+                        <h3>Chargement en cours...</h3>
+                        <p>Tentative de connexion à Firebase...</p>
+                    </div>
+                </article>
+
+                <h2 style="margin-top: 40px;">Derniers Articles</h2>
+                <div id="secondary-news-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <p style="padding: 20px; grid-column: 1 / -1;">Veuillez patienter pendant le chargement des données...</p>
+                </div>
+            </section>
+            
+            <aside class="sidebar">
+                <h2>🔥 Tendances</h2>
+                <ul class="trending-list" id="trending-list">
+                    <li>Chargement des tendances...</li>
+                </ul>
+
+                <h2 style="margin-top: 30px;" id="emissions">📢 Programme Phare</h2>
+                <div class="program-promo">
+                    <p style="font-weight: bold; color: var(--primary-color); font-size: 1.1em;">"Le Journal de Kolwezi"</p>
+                    <p style="font-size: 0.9em; margin-top: 5px; color: var(--text-color);">Tous les jours à 19h30. Ne manquez pas les nouvelles locales.</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer" id="apropos">
+        <ul class="footer-nav">
+            <li><a href="#">Qui sommes-nous ?</a></li>
+            <li><a href="#">Publicité</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">Mentions Légales</a></li>
+        </ul>
+        <p style="color: #aaa; font-size: 0.8em;">&copy; 2025 Mikuba TV. Tous droits réservés.</p>
+        <p style="color: #777; font-size: 0.7em; margin-top: 5px;">Propulsé par la puissance dynamique de Firebase.</p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Appel de la fonction de chargement DANS le fichier setup.js
+            // La fonction 'loadNews()' est rendue disponible par <script src="setup.js" defer></script>
+            if (typeof loadNews === 'function') {
+                loadNews(); 
+            } else {
+                console.error("Erreur: La fonction loadNews n'est pas définie. Vérifiez que setup.js est chargé correctement.");
+            }
+
+            // Gérer le bouton Direct
+            const liveButton = document.getElementById('live-btn');
+            liveButton.addEventListener('click', (e) => {
+                e.preventDefault(); 
+                
+                // Mettre le focus sur la section du lecteur (pour le défilement)
+                document.getElementById('live-section').scrollIntoView({ behavior: 'smooth' });
+                
+                // Ici, vous insérerez la vraie logique pour démarrer le lecteur
+                console.log("Flux Live en cours de lancement...");
+                // EXEMPLE: document.getElementById('player-placeholder').innerHTML = '<iframe src="votre-flux-rtmp.html"></iframe>';
+            });
+        });
+    </script>
+</body>
+</html>
