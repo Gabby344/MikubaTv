@@ -5,16 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mikuba TV - Administration des Articles PRO</title>
     
-    <!-- Utilisation de la police Inter pour un look plus moderne que Roboto -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- 🛑 IMPORTATION CRITIQUE : Les CDN DOIVENT ÊTRE CHARGÉS EN PREMIER 🛑 -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-    
-    <!-- 3. Votre fichier de logique -->
-    <!-- FIX CRITIQUE : Retrait de 'defer' pour assurer que publishArticle est défini avant l'appel. -->
-    <script src="setup.js"></script> 
     
     <style>
         /* Styles CSS Pro (Basé sur Inter et un thème Bleu/Gris Moderne) */
@@ -184,7 +178,6 @@
         <p style="margin-bottom: 20px;"><a href="index.html" style="color: var(--accent-color); font-weight: 600;">← Retour à l'accueil du site</a></p>
         
         <div class="main-grid">
-            <!-- Colonne 1 : Formulaire -->
             <div class="form-section">
                 <form id="article-form">
                     <div class="form-group">
@@ -232,7 +225,6 @@
                 <div id="status-message"></div>
             </div>
 
-            <!-- Colonne 2 : Prévisualisation EN DIRECT -->
             <div class="preview-section">
                 <h2>Aperçu de la Carte d'Actualité</h2>
                 <div class="preview-card">
@@ -247,7 +239,6 @@
         </div>
     </div>
 
-    <!-- SCRIPT DE GESTION DU FORMULAIRE ET DE LA PRÉVISUALISATION -->
     <script>
         const DEFAULT_IMAGE = "https://via.placeholder.com/300x180/E0E0E0/666666?text=Image+de+couverture";
 
@@ -277,7 +268,7 @@
                 
                 // Gestion de l'image
                 const imageUrl = inputImageUrl.value;
-                if (imageUrl.startsWith('http')) {
+                if (imageUrl && imageUrl.startsWith('http')) {
                     previewImage.src = imageUrl;
                 } else {
                     previewImage.src = DEFAULT_IMAGE;
@@ -294,9 +285,10 @@
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 
-                // Vérification de la fonction (utilise le message d'erreur UI, pas alert())
+                // Vérification CRITIQUE de la fonction `publishArticle`
                 if (typeof publishArticle !== 'function') {
-                    statusMessage.textContent = "❌ Erreur: Le script de publication (setup.js) n'est pas chargé. Vérifiez que le fichier est bien nommé 'setup.js' et qu'il est correctement importé en haut de la page.";
+                    // C'est cette erreur personnalisée qui est affichée si setup.js n'est pas chargé
+                    statusMessage.textContent = "❌ Erreur: Le script de publication (setup.js) n'est pas chargé. Vérifiez le nom du fichier et son emplacement (même dossier).";
                     statusMessage.classList.remove('success');
                     statusMessage.classList.add('error');
                     statusMessage.style.display = 'block';
@@ -325,5 +317,8 @@
 
         });
     </script>
+    
+    <script src="setup.js"></script>
+
 </body>
 </html>
