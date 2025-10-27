@@ -3,58 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mikuba TV - Administration des Articles</title>
+    <title>Mikuba TV - Administration des Articles PRO</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- Utilisation de la police Inter pour un look plus moderne que Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
+    <!-- 🛑 IMPORTATION CRITIQUE : Les CDN DOIVENT ÊTRE CHARGÉS EN PREMIER 🛑 -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
     
-    <script src="setup.js" defer></script> 
+    <!-- 3. Votre fichier de logique -->
+    <!-- FIX CRITIQUE : Retrait de 'defer' pour assurer que publishArticle est défini avant l'appel. -->
+    <script src="setup.js"></script> 
     
     <style>
-        /* Variables de Couleurs Modernes */
+        /* Styles CSS Pro (Basé sur Inter et un thème Bleu/Gris Moderne) */
         :root {
-            --primary-color: #E74C3C; /* Rouge Vif */
-            --secondary-color: #2C3E50; /* Bleu Nuit */
-            --accent-color: #3498DB; /* Bleu Clair */
-            --text-color: #333;
-            --light-bg: #F0F2F5;
+            --primary-color: #0077B6; /* Bleu Profond et Pro */
+            --secondary-color: #4A4E69; /* Gris Sophistiqué */
+            --accent-color: #48A9A6; /* Teal pour l'accent */
+            --text-color: #2D2A32;
+            --light-bg: #F8F9FA;
             --card-bg: #FFFFFF;
-            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --shadow-subtle: 0 2px 10px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
-        body { background-color: var(--light-bg); padding: 40px 20px; color: var(--text-color); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--light-bg); padding: 30px 20px; color: var(--text-color); }
 
         .container {
-            max-width: 900px; margin: 0 auto; background-color: var(--card-bg);
-            padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); /* Ombre plus marquée */
+            max-width: 1200px; margin: 0 auto;
         }
+        
+        /* Layout Grid pour Formulaire + Preview (Deux colonnes sur grand écran) */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-subtle);
+        }
+        @media (min-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
         h1 { 
-            font-size: 2.5em; color: var(--secondary-color); margin-bottom: 30px; 
-            border-bottom: 5px solid var(--primary-color); padding-bottom: 15px; 
+            font-size: 2.2em; color: var(--primary-color); margin-bottom: 10px; 
             font-weight: 900;
+        }
+        .subtitle {
+            font-size: 1.1em; color: var(--secondary-color); margin-bottom: 30px;
         }
         
         /* Formulaire */
+        .form-section {
+            padding-right: 20px;
+        }
         .form-group { margin-bottom: 25px; }
         label { 
             display: block; margin-bottom: 8px; font-weight: 700; 
-            color: var(--secondary-color); font-size: 1.1em;
+            color: var(--secondary-color); font-size: 0.95em;
         }
-        input[type="text"], textarea, select {
-            width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px;
-            font-size: 1em; transition: all 0.3s; background-color: #f9f9f9;
+        input[type="text"], input[type="url"], textarea, select {
+            width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: var(--border-radius);
+            font-size: 1em; transition: all 0.3s; background-color: #FFFFFF;
         }
-        input[type="text"]:focus, textarea:focus, select:focus { 
-            border-color: var(--accent-color); 
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); 
-            background-color: var(--card-bg);
+        input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus { 
+            border-color: var(--primary-color); 
+            box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.15); 
             outline: none; 
         }
-        textarea { resize: vertical; min-height: 300px; }
-        select { appearance: none; /* Cache la flèche par défaut */
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233498DB' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        textarea { resize: vertical; min-height: 250px; }
+        select { appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230077B6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: right 15px center;
             background-size: 1em;
@@ -62,20 +87,20 @@
 
         /* Bouton Publier */
         #publish-btn {
-            background-color: var(--primary-color); color: white; padding: 18px 35px;
-            border: none; border-radius: 10px; font-weight: 700; font-size: 1.2em;
+            background-color: var(--primary-color); color: white; padding: 15px 30px;
+            border: none; border-radius: var(--border-radius); font-weight: 700; font-size: 1.1em;
             cursor: pointer; transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 119, 182, 0.3);
             width: 100%;
             margin-top: 10px;
         }
         #publish-btn:hover:not([disabled]) { 
-            background-color: #C0392B; 
-            transform: translateY(-3px); 
-            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.6);
+            background-color: #005A8D; 
+            transform: translateY(-2px); 
+            box-shadow: 0 7px 18px rgba(0, 119, 182, 0.4);
         }
         #publish-btn:disabled {
-            background-color: #95a5a6;
+            background-color: #B0BEC5;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
@@ -83,97 +108,221 @@
         
         /* Message de statut */
         #status-message {
-            margin-top: 30px; padding: 20px; border-radius: 8px; font-weight: 700;
-            font-size: 1.1em;
-            display: none; /* Caché par défaut */
+            margin-top: 30px; padding: 15px; border-radius: 8px; font-weight: 600;
+            font-size: 1em;
+            display: none; 
             text-align: center;
         }
-        .success { background-color: #D4EDDA; color: #155724; border: 1px solid #C3E6CB; }
-        .error { background-color: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB; }
+        .success { background-color: #E6FFFA; color: #38A169; border: 1px solid #9AE6B4; }
+        .error { background-color: #FED7D7; color: #C53030; border: 1px solid #FEB2B2; }
+
+        /* ------------------------------------------- */
+        /* SECTION PRÉVISUALISATION EN DIRECT */
+        /* ------------------------------------------- */
+        .preview-section {
+            padding: 20px;
+            background-color: #e3f2fd; 
+            border-radius: var(--border-radius);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+            min-height: 400px;
+            position: sticky; /* Reste visible pendant le défilement du formulaire */
+            top: 20px;
+        }
+        .preview-section h2 {
+            font-size: 1.4em;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+            text-align: center;
+        }
+        
+        .preview-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow-subtle);
+        }
+        .preview-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background-color: #ddd;
+            display: block;
+        }
+        .preview-content {
+            padding: 15px;
+        }
+        .preview-content .meta {
+            font-size: 0.75em;
+            color: #999;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .preview-content h3 {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            min-height: 25px; 
+        }
+        .preview-content p {
+            font-size: 0.9em;
+            color: var(--secondary-color);
+            line-height: 1.4;
+            min-height: 40px; 
+        }
+
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>🛠️ Tableau de Bord - Publication d'Articles</h1>
+        <p class="subtitle">Créez et prévisualisez votre nouvelle actualité pour Mikuba TV.</p>
         
-        <p style="margin-bottom: 30px;"><a href="index.html" style="color: var(--accent-color); font-weight: 500;">← Retour à l'accueil du site</a></p>
+        <p style="margin-bottom: 20px;"><a href="index.html" style="color: var(--accent-color); font-weight: 600;">← Retour à l'accueil du site</a></p>
         
-        <form id="article-form">
-            <div class="form-group">
-                <label for="title">Titre de l'Article</label>
-                <input type="text" id="title" placeholder="Titre principal de l'actualité" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="summary">Résumé (court - pour la carte d'actualité sur la page d'accueil)</label>
-                <input type="text" id="summary" placeholder="Maximum 150 caractères" required>
+        <div class="main-grid">
+            <!-- Colonne 1 : Formulaire -->
+            <div class="form-section">
+                <form id="article-form">
+                    <div class="form-group">
+                        <label for="title">Titre de l'Article <span style="color: var(--primary-color);">*</span></label>
+                        <input type="text" id="title" placeholder="Titre principal impactant (max. 100 chars)" maxlength="100" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="summary">Résumé (pour la carte d'accueil - max. 160 chars) <span style="color: var(--primary-color);">*</span></label>
+                        <input type="text" id="summary" placeholder="Description courte pour accrocher le lecteur." maxlength="160" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imageUrl">URL de l'Image de Couverture <span style="color: var(--primary-color);">*</span></label>
+                        <input type="url" id="imageUrl" placeholder="Ex: https://votresite.com/images/article1.jpg" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Catégorie <span style="color: var(--primary-color);">*</span></label>
+                        <select id="category" required>
+                            <option value="" disabled selected>Sélectionnez une catégorie</option>
+                            <option value="Politique">Politique</option>
+                            <option value="Économie">Économie</option>
+                            <option value="Social">Social</option>
+                            <option value="Sport">Sport</option>
+                            <option value="Sécurité">Sécurité</option>
+                            <option value="Culture">Culture</option>
+                            <option value="Général">Général</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="author">Auteur</label>
+                        <input type="text" id="author" value="Rédaction Mikuba TV" placeholder="Nom du journaliste ou de l'équipe de rédaction">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="body">Corps de l'Article (Contenu intégral) <span style="color: var(--primary-color);">*</span></label>
+                        <textarea id="body" placeholder="Commencez à rédiger ici. Utilisez des balises HTML de base (<h2>, <p>) pour la mise en forme. Attention : les balises HTML seront insérées directement dans la base de données !" required></textarea>
+                    </div>
+
+                    <button type="submit" id="publish-btn">Publier l'Article</button>
+                </form>
+
+                <div id="status-message"></div>
             </div>
 
-            <div class="form-group">
-                <label for="imageUrl">URL de l'Image de Couverture</label>
-                <input type="text" id="imageUrl" placeholder="Ex: https://votresite.com/images/article1.jpg" required>
+            <!-- Colonne 2 : Prévisualisation EN DIRECT -->
+            <div class="preview-section">
+                <h2>Aperçu de la Carte d'Actualité</h2>
+                <div class="preview-card">
+                    <img id="preview-image" src="https://via.placeholder.com/300x180/E0E0E0/666666?text=Image+de+couverture" alt="Aperçu de l'image">
+                    <div class="preview-content">
+                        <p class="meta"><span id="preview-category">GÉNÉRAL</span> | Aujourd'hui</p>
+                        <h3 id="preview-title">Titre de l'Article...</h3>
+                        <p id="preview-summary">Le résumé de l'article sera affiché ici pour voir comment il apparaît sur la page d'accueil.</p>
+                    </div>
+                </div>
             </div>
-
-            <div class="form-group">
-                <label for="category">Catégorie</label>
-                <select id="category" required>
-                    <option value="" disabled selected>Sélectionnez une catégorie</option>
-                    <option value="Politique">Politique</option>
-                    <option value="Économie">Économie</option>
-                    <option value="Social">Social</option>
-                    <option value="Sport">Sport</option>
-                    <option value="Sécurité">Sécurité</option>
-                    <option value="Culture">Culture</option>
-                    <option value="Général">Général</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="author">Auteur</label>
-                <input type="text" id="author" value="Rédaction Mikuba TV" placeholder="Nom du journaliste ou de l'équipe de rédaction">
-            </div>
-
-            <div class="form-group">
-                <label for="body">Corps de l'Article (Contenu intégral)</label>
-                <textarea id="body" placeholder="Commencez à rédiger ici. Utilisez des balises HTML pour la mise en forme (ex: <h2>, <p>)." required></textarea>
-            </div>
-
-            <button type="submit" id="publish-btn">Publier l'Article</button>
-        </form>
-
-        <div id="status-message"></div>
+        </div>
     </div>
 
+    <!-- SCRIPT DE GESTION DU FORMULAIRE ET DE LA PRÉVISUALISATION -->
     <script>
+        const DEFAULT_IMAGE = "https://via.placeholder.com/300x180/E0E0E0/666666?text=Image+de+couverture";
+
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('article-form');
             const statusMessage = document.getElementById('status-message');
             const btn = document.getElementById('publish-btn');
             
+            // Éléments de Prévisualisation
+            const previewTitle = document.getElementById('preview-title');
+            const previewSummary = document.getElementById('preview-summary');
+            const previewImage = document.getElementById('preview-image');
+            const previewCategory = document.getElementById('preview-category');
+
+            // Éléments du Formulaire
+            const inputTitle = document.getElementById('title');
+            const inputSummary = document.getElementById('summary');
+            const inputImageUrl = document.getElementById('imageUrl');
+            const inputCategory = document.getElementById('category');
+
+            // Fonction de Mise à Jour de la Prévisualisation
+            const updatePreview = () => {
+                // Mise à jour du texte
+                previewTitle.textContent = inputTitle.value || "Titre de l'Article...";
+                previewSummary.textContent = inputSummary.value || "Le résumé de l'article sera affiché ici pour voir comment il apparaît sur la page d'accueil.";
+                previewCategory.textContent = inputCategory.value.toUpperCase() || "GÉNÉRAL";
+                
+                // Gestion de l'image
+                const imageUrl = inputImageUrl.value;
+                if (imageUrl.startsWith('http')) {
+                    previewImage.src = imageUrl;
+                } else {
+                    previewImage.src = DEFAULT_IMAGE;
+                }
+            };
+            
+            // Ajouter des écouteurs d'événements pour la prévisualisation en direct
+            inputTitle.addEventListener('input', updatePreview);
+            inputSummary.addEventListener('input', updatePreview);
+            inputImageUrl.addEventListener('input', updatePreview);
+            inputCategory.addEventListener('change', updatePreview);
+            
+            // Gestion de l'événement de Soumission
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 
-                // Vérification de la fonction (au cas où setup.js n'aurait pas chargé)
+                // Vérification de la fonction (utilise le message d'erreur UI, pas alert())
                 if (typeof publishArticle !== 'function') {
-                    alert("Erreur: Le script de publication (setup.js) n'a pas chargé.");
+                    statusMessage.textContent = "❌ Erreur: Le script de publication (setup.js) n'est pas chargé. Vérifiez que le fichier est bien nommé 'setup.js' et qu'il est correctement importé en haut de la page.";
+                    statusMessage.classList.remove('success');
+                    statusMessage.classList.add('error');
+                    statusMessage.style.display = 'block';
                     return;
                 }
 
-                // 1. Récupération des données du formulaire
+                // Récupération des données du formulaire
                 const newArticleData = {
-                    title: document.getElementById('title').value,
+                    title: inputTitle.value,
                     author: document.getElementById('author').value,
-                    category: document.getElementById('category').value,
-                    summary: document.getElementById('summary').value,
-                    imageUrl: document.getElementById('imageUrl').value,
+                    category: inputCategory.value,
+                    summary: inputSummary.value,
+                    imageUrl: inputImageUrl.value,
                     body: document.getElementById('body').value,
                 };
 
-                // 2. Appel à la fonction centralisée dans setup.js
-                // L'état de l'interface utilisateur est géré par publishArticle
+                // Appel à la fonction centralisée dans setup.js
                 publishArticle(newArticleData, btn, form, statusMessage);
             });
+            
+            // Initialisation de l'aperçu et gestion des erreurs d'image
+            updatePreview();
+            previewImage.onerror = () => {
+                previewImage.src = DEFAULT_IMAGE;
+            };
+
         });
     </script>
 </body>
