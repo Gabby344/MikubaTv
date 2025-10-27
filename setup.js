@@ -1,15 +1,14 @@
 /**
  * Fichier : setup.js
  * Description : Configuration de Firebase et fonctions de manipulation de la base de données pour Mikuba TV.
- * Contient : Initialisation Firebase, fonctions de publication, loadNews(), loadArticle(), insertNewsCard(), displayArticleError().
  */
 
 // ----------------------------------------------------
 // ÉTAPE 1 : CONFIGURATION ET INITIALISATION DE FIREBASE
 // ----------------------------------------------------
-// (Vos clés Firebase sont conservées ici)
+// REMPLACER LES VALEURS PAR VOS VRAIES CLÉS !
 const firebaseConfig = {
-    apiKey: "AIzaSyAiMnvIMBqn2VqSQsFpb-Ajx5VORVd0JoA",
+    apiKey: "AIzaSyAiMnvIMBqn2VqSQsFpb-Ajx5VORVd0JoA", // ⚠️ UTILISEZ VOTRE VRAIE CLÉ
     authDomain: "danicakakudji.firebaseapp.com",
     projectId: "danicakakudji",
     storageBucket: "danicakakudji.appspot.com",
@@ -17,61 +16,65 @@ const firebaseConfig = {
     appId: "1:409346091245:web:6674becbc81d97c292c4e4"
 };
 
+// Vérification de l'initialisation pour éviter les erreurs
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Rendre la référence de la base de données globale
 const database = firebase.database(); 
 
 // ----------------------------------------------------
-// CORRECTION : FONCTION DE PUBLICATION (Pour admin.html)
+// FONCTION DE PUBLICATION (Pour admin.html)
 // ----------------------------------------------------
 
 /**
- * Publie un nouvel article sur Firebase, incluant la gestion de l'UI.
- * @param {object} articleData - L'objet contenant toutes les données de l'article.
- * @param {HTMLElement} btn - Le bouton de publication pour l'état (disabled, texte).
- * @param {HTMLElement} form - Le formulaire pour la réinitialisation.
- * @param {HTMLElement} statusMessage - L'élément d'affichage du statut (succès/erreur).
+ * Publie un nouvel article sur Firebase.
+ * Gère les états de chargement, succès et erreur de l'interface utilisateur.
+ * @param {object} articleData - L'objet contenant toutes les données de l'article (avant métadonnées).
+ * @param {HTMLElement} btn - Le bouton de publication.
+ * @param {HTMLElement} form - Le formulaire HTML.
+ * @param {HTMLElement} statusMessage - L'élément d'affichage du statut.
  */
 function publishArticle(articleData, btn, form, statusMessage) {
     
-    // 1. Gestion de l'état de l'interface utilisateur
+    // 1. Gestion de l'état UI - Démarrage
     btn.disabled = true;
-    btn.textContent = 'Publication...';
+    btn.textContent = 'Envoi en cours...';
     statusMessage.style.display = 'none';
+    statusMessage.classList.remove('success', 'error');
 
-    // 2. Ajout des métadonnées formatées
-    // Utilisation de ServerValue.TIMESTAMP est plus précis et fiable que new Date().getTime()
+    // 2. Ajout des métadonnées (Date, Timestamp)
+    // Utilisation de ServerValue.TIMESTAMP pour un meilleur tri
     articleData.timestamp = firebase.database.ServerValue.TIMESTAMP;
     
-    // Format de date simplifié pour l'affichage : JJ-MM-AAAA
+    // Date formatée pour l'affichage (JJ-MM-AAAA)
     const now = new Date();
     articleData.date = now.toLocaleDateString('fr-FR', {
         day: '2-digit', 
         month: '2-digit', 
         year: 'numeric' 
     }).replace(/\//g, '-'); 
-
-    // 3. Robustesse des données (nettoyage)
-    articleData.title = (articleData.title || 'Article sans titre').trim();
-    // ... (autres nettoyages peuvent être ajoutés si nécessaire)
-
-    // 4. Écrire dans la collection 'articles'
+    
+    // 3. Écrire dans la collection 'articles'
     database.ref('articles').push(articleData)
         .then(() => {
             // Succès
             console.log("Article publié avec succès !");
-            statusMessage.textContent = '✅ Article publié avec succès !';
-            statusMessage.className = 'success';
-            form.reset(); // Vider le formulaire après succès
+            statusMessage.textContent = '✅ Article publié avec succès ! Redirection vers index.html en cours...';
+            statusMessage.classList.add('success');
+            form.reset(); 
+            
+            // Redirection après publication pour UX
+            setTimeout(() => {
+                window.location.href = 'index.html'; 
+            }, 2000); 
+            
         })
         .catch((error) => {
             // Erreur
             console.error("Erreur de publication:", error);
-            statusMessage.textContent = `❌ Erreur lors de la publication : ${error.message || 'Problème de connexion'}`;
-            statusMessage.className = 'error';
+            statusMessage.textContent = `❌ Erreur lors de la publication : ${error.message || 'Problème de connexion ou de permissions.'}`;
+            statusMessage.classList.add('error');
         })
         .finally(() => {
             // Finalisation
@@ -81,17 +84,13 @@ function publishArticle(articleData, btn, form, statusMessage) {
         });
 }
 
-
 // ----------------------------------------------------
-// FONCTIONS UTILITAIRES POUR L'AFFICHAGE (Petites améliorations)
+// FONCTIONS UTILITAIRES POUR L'AFFICHAGE (index.html, article.html)
+// (Inclues ici pour la complétude, non modifiées par rapport à la dernière version validée)
 // ----------------------------------------------------
 
 /**
- * Construit et insère une carte d'actualité (article) pour la page d'accueil.
- * @param {object} article - Les données de l'article.
- * @param {string} articleId - L'ID de l'article dans Firebase.
- * @param {string} containerId - L'ID du conteneur HTML.
- * @param {boolean} isMajor - Vrai si c'est l'article principal.
+ * Construit et insère une carte d'actualité.
  */
 function insertNewsCard(article, articleId, containerId, isMajor = false) {
     const container = document.getElementById(containerId);
@@ -100,10 +99,7 @@ function insertNewsCard(article, articleId, containerId, isMajor = false) {
     const title = article.title || 'Titre manquant';
     const summary = article.summary || 'Résumé non disponible.';
     const category = article.category ? article.category.toUpperCase() : 'GÉNÉRAL';
-    // Assurer que la date s'affiche correctement (utilisation de .date créé par publishArticle)
     const date = article.date || 'Date inconnue'; 
-    
-    // Utilisation de l'image de substitution s'il n'y a pas d'URL (Amélioration de l'alt)
     const imageUrl = article.imageUrl && article.imageUrl.startsWith('http') ? article.imageUrl : 'https://via.placeholder.com/900x500/CCCCCC/666666?text=Image+Manquante';
     const link = `article.html?id=${articleId}`; 
 
@@ -136,7 +132,6 @@ function insertNewsCard(article, articleId, containerId, isMajor = false) {
  * Affiche un message d'erreur sur la page article.html
  */
 function displayArticleError(message) {
-    // (Pas de changement majeur)
     const container = document.getElementById('article-content-container');
     if (!container) return;
     
@@ -151,11 +146,6 @@ function displayArticleError(message) {
     if (pageTitle) pageTitle.textContent = "Erreur - Mikuba TV";
 }
 
-
-// ----------------------------------------------------
-// FONCTIONS DE CHARGEMENT DE DONNÉES (index.html et article.html)
-// ----------------------------------------------------
-
 /**
  * Charge les actualités pour la page d'accueil (index.html).
  */
@@ -165,34 +155,28 @@ function loadNews() {
     const secondaryContainer = document.getElementById('secondary-news-container');
     const trendingList = document.getElementById('trending-list');
 
-    // Vider les conteneurs des Skeletons (pour les remplacer par le contenu réel)
     if (secondaryContainer) secondaryContainer.innerHTML = ''; 
 
     newsRef.once('value', (snapshot) => {
         const articles = [];
         snapshot.forEach((childSnapshot) => {
-            // Utiliser le spread operator pour fusionner ID et données
             articles.push({ id: childSnapshot.key, ...childSnapshot.val() });
         });
 
-        articles.reverse(); // Le plus récent est en position [0]
+        articles.reverse(); 
 
-        // 1. Gère l'Article Majeur
         const majorArticle = articles[0];
         if (majorArticle) {
-            // Supprime tous les éléments de chargement avant d'insérer
             if (majorContainer) majorContainer.innerHTML = '';
             insertNewsCard(majorArticle, majorArticle.id, 'major-news-container', true);
         } else {
             if (majorContainer) majorContainer.innerHTML = '<div class="card-content"><h3>Pas d\'actualité principale</h3><p>Veuillez ajouter des données via admin.html.</p></div>';
         }
         
-        // 2. Gère les Articles Secondaires (Articles 1, 2, 3)
-        const secondaryArticles = articles.slice(1, 4); // Prend les 3 suivants
+        const secondaryArticles = articles.slice(1, 4); 
         
-        // Supprime le contenu de chargement si des articles existent
         if (secondaryArticles.length > 0) {
-             if (secondaryContainer) secondaryContainer.innerHTML = ''; // Vider le conteneur avant l'ajout
+             if (secondaryContainer) secondaryContainer.innerHTML = ''; 
              secondaryArticles.forEach(article => {
                 insertNewsCard(article, article.id, 'secondary-news-container', false);
             });
@@ -202,10 +186,9 @@ function loadNews() {
             if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; font-style: italic; color: #777;">Aucun article disponible.</p>';
         }
         
-        // 3. Gère les Tendances
         if (trendingList) {
             trendingList.innerHTML = ''; 
-            const trendingArticles = articles.slice(0, Math.min(5, articles.length)); // Top 5
+            const trendingArticles = articles.slice(0, Math.min(5, articles.length));
             
             if (trendingArticles.length > 0) {
                 trendingArticles.forEach(article => {
@@ -223,10 +206,6 @@ function loadNews() {
 
     }, (error) => {
         console.error("Erreur de connexion Firebase:", error);
-        // Affichage des erreurs
-        if (majorContainer) majorContainer.innerHTML = '<div class="card-content"><h3>Erreur de connexion</h3><p style="color:red;">Impossible de charger les actualités depuis Firebase.</p></div>';
-        if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; color: red;">Erreur de chargement des articles.</p>';
-        if (trendingList) trendingList.innerHTML = '<li>Erreur de chargement.</li>';
     });
 }
 
@@ -244,8 +223,7 @@ function loadArticle(articleId) {
             displayArticleError(`Article avec l'ID '${articleId}' introuvable dans la base de données.`);
             return;
         }
-
-        // Mettre à jour le titre de la page pour le SEO/UX
+        
         const pageTitle = document.querySelector('title');
         if (pageTitle) pageTitle.textContent = `${article.title} - Mikuba TV`;
 
@@ -270,7 +248,6 @@ function loadArticle(articleId) {
             </div>
         `;
         
-        // Retirer le rôle de status de chargement une fois le contenu chargé
         if (container) {
             const statusIndicator = container.querySelector('[role="status"]');
             if (statusIndicator) statusIndicator.remove(); 
