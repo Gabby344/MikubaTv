@@ -1,34 +1,23 @@
 /**
  * Fichier : setup.js
- * Description : Configuration de Firebase et fonctions de manipulation de la base de données pour Mikuba TV.
+ * Description : Fonctions de manipulation de la base de données Realtime pour Mikuba TV.
+ *
+ * ATTENTION: Ce fichier suppose que les CDN de Firebase (v8) ont été chargés et
+ * que firebase.initializeApp(config) a été appelé dans le fichier HTML.
  */
 
-// ----------------------------------------------------
-// ÉTAPE 1 : CONFIGURATION ET INITIALISATION DE FIREBASE
-// ----------------------------------------------------
-
-const firebaseConfig = {
-    // 🔑 CLÉS MISES À JOUR AVEC VOS VRAIES VALEURS
-    apiKey: "AIzaSyCQWUPt2d5RaPvPfSqgi4oU-VxMpL6STvQ",
-    authDomain: "shekinahmukeni-74b9d.firebaseapp.com",
-    projectId: "shekinahmukeni-74b9d",
-    storageBucket: "shekinahmukeni-74b9d.firebasestorage.app", 
-    messagingSenderId: "351153147633",
-    appId: "1:351153147633:web:c82d85f1ad9a79d6ed6350"
-};
-
-// Vérification et Initialisation de l'application Firebase (v8 format)
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    try {
-        firebase.initializeApp(firebaseConfig);
-        console.log("Firebase initialisé avec succès pour le projet shekinahmukeni !");
-    } catch (e) {
-        console.error("Erreur critique lors de l'initialisation de Firebase:", e);
-    }
-}
-
 // Référence à la base de données Realtime
-const database = typeof firebase !== 'undefined' ? firebase.database() : null; 
+// Nous vérifions si l'objet 'firebase' est disponible globalement (méthode v8 CDN)
+const database = (typeof firebase !== 'undefined' && firebase.apps.length) ? firebase.database() : null;
+
+// Vérification de la connexion après chargement de Firebase dans le HTML
+document.addEventListener('DOMContentLoaded', () => {
+    if (!database) {
+        console.error("Erreur critique: La base de données Realtime n'a pas pu être initialisée. Vérifiez les CDN et l'initialisation.");
+        // Un message d'erreur sera affiché dans le HTML via un autre script
+    }
+});
+
 
 // ----------------------------------------------------
 // FONCTION DE PUBLICATION (Pour admin.html)
@@ -38,9 +27,9 @@ const database = typeof firebase !== 'undefined' ? firebase.database() : null;
  * Publie un nouvel article sur Firebase.
  */
 function publishArticle(articleData, btn, form, statusMessage) {
-    
+
     if (!database) {
-        statusMessage.textContent = '❌ Erreur: Base de données non connectée. Vérifiez les clés API et les CDN.';
+        statusMessage.textContent = '❌ Erreur: Base de données non connectée.';
         statusMessage.classList.add('error');
         statusMessage.style.display = 'block';
         return;
@@ -50,34 +39,32 @@ function publishArticle(articleData, btn, form, statusMessage) {
     btn.disabled = true;
     btn.textContent = 'Envoi en cours...';
     statusMessage.style.display = 'none';
-    statusMessage.classList.remove('success', 'error');
+    statusMessage.classList.remove('text-green-600', 'text-red-600');
 
     // 2. Ajout des métadonnées
     articleData.timestamp = firebase.database.ServerValue.TIMESTAMP;
     const now = new Date();
     articleData.date = now.toLocaleDateString('fr-FR', {
-        day: '2-digit', month: '2-digit', year: 'numeric' 
-    }).replace(/\//g, '-'); 
-    
-    // 3. Écrire dans la collection 'articles'
+        day: '2-digit', month: '2-digit', year: 'numeric'
+    }).replace(/\//g, '-');
+
+    // 3. Écrire dans le nœud 'articles'
     database.ref('articles').push(articleData)
         .then(() => {
             // Succès
             console.log("Article publié avec succès !");
-            statusMessage.textContent = '✅ Article publié avec succès ! Redirection vers index.html en cours...';
-            statusMessage.classList.add('success');
-            form.reset(); 
+            statusMessage.textContent = '✅ Article publié avec succès !';
+            statusMessage.classList.add('text-green-600');
+            form.reset();
             
-            // Redirection après publication pour UX
-            setTimeout(() => {
-                window.location.href = 'index.html'; 
-            }, 2000); 
+            // Redirection après publication pour UX (si nécessaire, sinon laisser l'admin sur place)
+            // setTimeout(() => { window.location.href = 'index.html'; }, 2000);
         })
         .catch((error) => {
             // Erreur
             console.error("Erreur de publication:", error);
             statusMessage.textContent = `❌ Erreur lors de la publication : ${error.message || 'Problème de connexion ou de permissions.'}`;
-            statusMessage.classList.add('error');
+            statusMessage.classList.add('text-red-600');
         })
         .finally(() => {
             // Finalisation
@@ -88,186 +75,98 @@ function publishArticle(articleData, btn, form, statusMessage) {
 }
 
 // ----------------------------------------------------
-// FONCTIONS UTILITAIRES POUR L'AFFICHAGE (index.html, article.html)
+// FONCTIONS UTILITAIRES POUR L'AFFICHAGE (index.html)
 // ----------------------------------------------------
+
+// Les styles Tailwind gèrent l'esthétique, on garde la logique d'injection
 
 /**
  * Insère une carte d'article dans le conteneur spécifié (pour index.html).
  */
-function insertNewsCard(article, articleId, containerId, isMajor = false) {
-    const container = document.getElementById(containerId);
-    if (!container) return; 
-
+function createNewsCardHTML(article, articleId, isMajor = false) {
     const title = article.title || 'Titre manquant';
     const summary = article.summary || 'Résumé non disponible.';
-    const category = article.category ? article.category.toUpperCase() : 'GÉNÉRAL';
-    const date = article.date || 'Date inconnue'; 
-    const imageUrl = article.imageUrl && article.imageUrl.startsWith('http') ? article.imageUrl : 'https://via.placeholder.com/900x500/CCCCCC/666666?text=Image+Manquante';
-    const link = `article.html?id=${articleId}`; 
+    const category = (article.category || 'GÉNÉRAL').toUpperCase();
+    const date = article.date || 'Date inconnue';
+    const imageUrl = article.imageUrl && article.imageUrl.startsWith('http') ? article.imageUrl : 'https://placehold.co/900x500/CCCCCC/666666?text=Image+Manquante';
+    const link = `article.html?id=${articleId}`; // Lien vers la page de détail (non fournie)
 
-    const imageHeight = isMajor ? '550px' : '220px'; 
-    
-    const cardHTML = `
-        <img src="${imageUrl}" alt="Image de couverture pour : ${title}" style="height: ${imageHeight};" loading="lazy">
-        <div class="card-content">
-            <p style="font-size: 0.8em; color: var(--primary-color); font-weight: bold;">${category}</p>
-            <p style="font-size: 0.75em; color: gray; margin-bottom: 5px;">${date}</p>
-            <h3>${title}</h3>
-            <p>${summary}</p>
-            <span style="display: block; margin-top: 10px; font-weight: 500; color: var(--accent-color);">Lire le reportage →</span>
+    // Logique d'affichage en grille Tailwind
+    return `
+        <div data-article-id="${articleId}" class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-[1.005] cursor-pointer" onclick="window.location.href='${link}'">
+            <img src="${imageUrl}" alt="Couverture : ${title}" 
+                 class="w-full h-48 ${isMajor ? 'md:h-64' : 'h-48'} object-cover bg-gray-200"
+                 onerror="this.onerror=null;this.src='https://placehold.co/300x180/E0E0E0/666666?text=Image+Indisponible'">
+
+            <div class="p-5">
+                <p class="text-xs font-bold text-gray-500 mb-2 flex justify-between items-center">
+                    <span class="uppercase text-red-700">${category}</span>
+                    <span class="text-gray-400">${date}</span>
+                </p>
+                <h3 class="text-xl font-extrabold text-gray-900 mb-2 line-clamp-2">${title}</h3>
+                <p class="text-sm text-gray-600 line-clamp-3">${summary}</p>
+                <div class="mt-4 text-blue-600 font-semibold flex items-center">
+                    Lire la suite
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </div>
+            </div>
         </div>
     `;
-
-    if (isMajor) {
-        container.innerHTML = cardHTML;
-        container.setAttribute('onclick', `window.location.href='${link}'`);
-        container.classList.add('major-news-card'); 
-    } else {
-        const newArticle = document.createElement('article');
-        newArticle.classList.add('news-card');
-        newArticle.setAttribute('onclick', `window.location.href='${link}'`);
-        newArticle.innerHTML = cardHTML;
-        container.appendChild(newArticle);
-    }
-}
-
-/**
- * Affiche un message d'erreur clair dans la zone de l'article (pour article.html).
- */
-function displayArticleError(message) {
-    const container = document.getElementById('article-content-container');
-    if (!container) return;
-    
-    // Supprime tout le contenu actuel (y compris le skeleton)
-    container.innerHTML = `
-        <div style="text-align: center; margin-top: 50px; color: var(--primary-color);">
-            <h2 style="font-size: 2em; border-bottom: none; font-weight: 700;">📰 Erreur de Chargement</h2>
-            <p style="font-size: 1.1em; margin-top: 20px;">${message}</p>
-            <p style="margin-top: 30px;"><a href="index.html">Retour à la page d'accueil</a></p>
-        </div>
-    `;
-    const pageTitle = document.querySelector('title');
-    if (pageTitle) pageTitle.textContent = "Erreur - Mikuba TV";
 }
 
 /**
  * Charge les articles de la base de données pour la page d'accueil (index.html).
  */
 function loadNews() {
-    if (!database) return;
-    const newsRef = database.ref('articles').orderByChild('timestamp').limitToLast(10); 
-    const majorContainer = document.getElementById('major-news-container');
-    const secondaryContainer = document.getElementById('secondary-news-container');
-    const trendingList = document.getElementById('trending-list');
+    const articlesContainer = document.getElementById('articles-container');
+    const statusMessageGlobal = document.getElementById('status-message-global');
+    const mainContent = document.getElementById('main-content');
+    
+    if (!database) {
+        statusMessageGlobal.textContent = '❌ Erreur Critique! Base de données non connectée. (RTDB)';
+        statusMessageGlobal.className = 'p-6 bg-red-100 text-red-700 rounded-xl font-bold mt-8';
+        return;
+    }
 
-    if (secondaryContainer) secondaryContainer.innerHTML = ''; 
+    // Récupérer les 10 derniers articles triés par timestamp
+    const newsRef = database.ref('articles').orderByChild('timestamp').limitToLast(10);
 
-    newsRef.once('value', (snapshot) => {
-        const articles = [];
+    // Utilisation de .on() pour les mises à jour en temps réel (Realtime Database)
+    newsRef.on('value', (snapshot) => {
+        let articles = [];
         snapshot.forEach((childSnapshot) => {
             articles.push({ id: childSnapshot.key, ...childSnapshot.val() });
         });
 
-        articles.reverse(); 
+        // Les données arrivent triées par timestamp (ascendant par défaut), on inverse pour le plus récent en premier
+        articles.reverse();
 
-        const majorArticle = articles[0];
-        if (majorArticle) {
-            if (majorContainer) majorContainer.innerHTML = '';
-            insertNewsCard(majorArticle, majorArticle.id, 'major-news-container', true);
+        // Stockage pour un éventuel modal/détail si on implémente article.html
+        window.currentArticles = articles;
+
+        // Vider le conteneur
+        articlesContainer.innerHTML = '';
+        
+        // Affichage
+        if (articles.length === 0) {
+            articlesContainer.innerHTML = `
+                <p class="col-span-full text-center text-lg text-gray-500 p-10 bg-white rounded-xl shadow">
+                    Aucun article n'a été publié pour le moment. Publiez-en un via admin.html.
+                </p>
+            `;
         } else {
-            if (majorContainer) majorContainer.innerHTML = '<div class="card-content"><h3>Pas d\'actualité principale</h3><p>Veuillez ajouter des données via admin.html.</p></div>';
+            articles.forEach(article => {
+                articlesContainer.innerHTML += createNewsCardHTML(article, article.id);
+            });
         }
         
-        const secondaryArticles = articles.slice(1, 4); 
-        
-        if (secondaryArticles.length > 0) {
-             if (secondaryContainer) secondaryContainer.innerHTML = ''; 
-             secondaryArticles.forEach(article => {
-                 insertNewsCard(article, article.id, 'secondary-news-container', false);
-             });
-        } else if (articles.length > 0) {
-            if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; font-style: italic; color: #777;">Seul un article principal est disponible.</p>';
-        } else {
-            if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; font-style: italic; color: #777;">Aucun article disponible.</p>';
-        }
-        
-        if (trendingList) {
-            trendingList.innerHTML = ''; 
-            const trendingArticles = articles.slice(0, Math.min(5, articles.length));
-            
-            if (trendingArticles.length > 0) {
-                trendingArticles.forEach(article => {
-                    const link = `article.html?id=${article.id}`;
-                    trendingList.innerHTML += `
-                        <li class="trending-item">
-                            <a href="${link}" title="${article.title}">${article.title}</a>
-                        </li>
-                    `;
-                });
-            } else {
-                 trendingList.innerHTML = '<li>Aucun article récent à afficher.</li>';
-            }
-        }
+        // Cacher le message de chargement et afficher le contenu principal
+        statusMessageGlobal.classList.add('hidden');
+        mainContent.classList.remove('hidden');
 
     }, (error) => {
-        console.error("Erreur de connexion Firebase:", error);
-    });
-}
-
-/**
- * Charge un article spécifique par ID (pour article.html).
- */
-function loadArticle(articleId) {
-    if (!database) {
-        displayArticleError("Erreur de connexion à la base de données Firebase.");
-        return;
-    }
-    
-    const articleRef = database.ref('articles/' + articleId);
-    const container = document.getElementById('article-content-container');
-
-    articleRef.once('value', (snapshot) => {
-        const article = snapshot.val();
-        
-        if (!article) {
-            displayArticleError(`Article avec l'ID '${articleId}' introuvable dans la base de données.`);
-            return;
-        }
-        
-        // 1. Mise à jour du titre de la page
-        const pageTitle = document.querySelector('title');
-        if (pageTitle) pageTitle.textContent = `${article.title} - Mikuba TV`;
-
-        const articleContent = article.body || '<p>Le corps complet de l\'article n\'est pas disponible. Veuillez vérifier les données dans Firebase.</p>';
-        const defaultImage = 'https://via.placeholder.com/900x500/CCCCCC/666666?text=Image+Manquante';
-        
-        // 2. Construction du HTML final
-        const articleHTML = `
-            <div class="article-header">
-                <h1>${article.title}</h1>
-                <div class="article-meta">
-                    <span class="category">${article.category || 'Général'}</span>
-                    <span>Par ${article.author || 'Rédaction Mikuba TV'}</span>
-                    <span>Publié le ${article.date || 'Date inconnue'}</span>
-                </div>
-            </div>
-            
-            <figure class="article-cover">
-                <img src="${article.imageUrl || defaultImage}" alt="Image de couverture pour ${article.title}">
-            </figure>
-            
-            <div class="article-body">
-                ${articleContent}
-            </div>
-        `;
-        
-        // 3. Injection du contenu final (écrase le skeleton dans article.html)
-        if (container) {
-            container.innerHTML = articleHTML;
-        }
-        
-    }, (error) => {
-        console.error("Erreur de chargement Firebase:", error);
-        displayArticleError("Erreur de connexion à la base de données Firebase.");
+        console.error("Erreur de connexion Firebase RTDB:", error);
+        statusMessageGlobal.textContent = '❌ Erreur de lecture de la base de données. Vérifiez les règles de sécurité.';
+        statusMessageGlobal.className = 'p-6 bg-red-100 text-red-700 rounded-xl font-bold mt-8';
     });
 }
