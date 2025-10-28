@@ -16,11 +16,17 @@
     <script src="setup.js" defer></script> 
     
     <style>
-        /* Variables (Identiques) */
+        /* Variables */
         :root {
-            --primary-color: #E74C3C; --secondary-color: #2C3E50; --accent-color: #3498DB; 
-            --text-color: #333; --light-bg: #F0F2F5; --card-bg: #FFFFFF; --header-bg: #FFFFFF;
-            --font-stack: 'Roboto', sans-serif; --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --primary-color: #E74C3C; /* Rouge */
+            --secondary-color: #2C3E50; /* Bleu marine/foncé */
+            --accent-color: #3498DB; /* Bleu clair */
+            --text-color: #333; 
+            --light-bg: #F0F2F5; 
+            --card-bg: #FFFFFF; 
+            --header-bg: #FFFFFF;
+            --font-stack: 'Roboto', sans-serif; 
+            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
             /* Couleurs Skeleton */
             --skeleton-color: #e2e5e7;
             --skeleton-highlight: #f8f8f8;
@@ -50,6 +56,7 @@
             padding: 40px 50px; border-radius: 12px; box-shadow: var(--shadow-md);
         }
         
+        /* Conteneur principal qui recevra le contenu dynamique */
         #article-content-container { 
             min-height: 400px; 
             display: flex; 
@@ -75,7 +82,7 @@
         .article-body ul, .article-body ol { margin-left: 20px; margin-bottom: 1.5em; }
 
         /* ---------------------------------- */
-        /* SKELETON SCREEN STYLES (Amélioration) */
+        /* SKELETON SCREEN STYLES */
         /* ---------------------------------- */
         .skeleton {
             background-color: var(--skeleton-color);
@@ -106,7 +113,7 @@
             .article-header h1 { font-size: 2em; }
             .container { padding: 20px; margin: 20px auto; }
             .article-body { font-size: 1em; }
-            .skeleton-cover { height: 250px; } /* Plus petit sur mobile */
+            .skeleton-cover { height: 250px; } 
         }
     </style>
 </head>
@@ -158,24 +165,25 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('live-btn').addEventListener('click', () => {
-                window.location.href = 'index.html#live-section';
+                // Vous devrez définir où le bouton 'DIRECT' mène réellement
+                window.location.href = 'index.html#live-section'; 
             });
             
             const urlParams = new URLSearchParams(window.location.search);
             const articleId = urlParams.get('id');
 
-            // Vérifie si la fonction loadArticle (dans setup.js) existe
+            // Vérifie si l'ID est présent et si la fonction d'affichage est disponible (chargée par setup.js)
             if (articleId && typeof loadArticle === 'function') {
                 loadArticle(articleId);
             } else {
-                // Afficher l'erreur si l'ID est manquant ou la fonction non trouvée
                 const container = document.getElementById('article-content-container');
+                // Supprime le skeleton avant d'afficher un message d'erreur
+                container.innerHTML = '';
+                
                 if (typeof displayArticleError === 'function') {
-                    // Supprime les skeletons pour afficher le message d'erreur clair
-                    container.innerHTML = ''; 
-                    displayArticleError("ID d'article manquant dans l'adresse (URL).");
+                    displayArticleError("ID d'article manquant dans l'adresse (URL) ou article non spécifié.");
                 } else {
-                    // Message de secours
+                    // Message de secours si même displayArticleError n'est pas chargée
                     container.innerHTML = '<p style="text-align: center; margin-top: 50px; color: red;">Erreur Critique : ID non trouvé ou librairie de chargement manquante.</p>';
                 }
             }
