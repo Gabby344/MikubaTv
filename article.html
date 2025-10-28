@@ -3,191 +3,486 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Chargement de l'Article - Mikuba TV</title>
+    <title>Article | MIKUBA TV Kolwezi</title>
     
-    <meta name="description" content="Lecture complète de l'article sur Mikuba TV.">
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
-    <script src="setup.js" defer></script> 
-    
+    <!-- Load Font Inter & Tone.js (TTS Playback) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
     <style>
-        /* Variables */
+        /* Configuration de base et personnalisation Tailwind */
         :root {
-            --primary-color: #E74C3C; /* Rouge */
-            --secondary-color: #2C3E50; /* Bleu marine/foncé */
-            --accent-color: #3498DB; /* Bleu clair */
-            --text-color: #333; 
-            --light-bg: #F0F2F5; 
-            --card-bg: #FFFFFF; 
-            --header-bg: #FFFFFF;
-            --font-stack: 'Roboto', sans-serif; 
-            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
-            /* Couleurs Skeleton */
-            --skeleton-color: #e2e5e7;
-            --skeleton-highlight: #f8f8f8;
-        }
-
-        /* Base & Réinitialisation */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: var(--font-stack); line-height: 1.7; color: var(--text-color); background-color: var(--light-bg); }
-        a { text-decoration: none; color: var(--accent-color); transition: color 0.3s; }
-        a:hover { color: var(--primary-color); }
-
-        /* HEADER & FOOTER */
-        .header { background-color: var(--header-bg); border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
-        .logo { font-size: 2.4em; font-weight: 900; color: var(--secondary-color); }
-        .logo span { color: var(--primary-color); }
-        .nav-list { list-style: none; display: flex; gap: 35px; }
-        .nav-link { color: var(--secondary-color); font-weight: 500; padding: 8px 0; position: relative; }
-        #live-btn { background-color: var(--primary-color); color: white; padding: 10px 22px; border-radius: 50px; font-weight: 700; cursor: pointer; border: none; }
-
-        .footer { background-color: var(--secondary-color); color: white; padding: 40px 5%; text-align: center; margin-top: 50px; }
-        .footer-nav { list-style: none; display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
-        .footer-nav a { color: #ddd; font-size: 0.95em; }
-
-        /* Contenu de l'Article */
-        .container {
-            width: 90%; max-width: 900px; margin: 40px auto; background-color: var(--card-bg);
-            padding: 40px 50px; border-radius: 12px; box-shadow: var(--shadow-md);
+            --primary-color: #B70000; /* Rouge Profond Mikuba */
+            --secondary-color: #0F0F10; /* Noir Rich */
+            --accent-color: #008CBA; /* Bleu Cyber Électrique */
+            --background-body: #F0F2F5; /* Gris clair de fond professionnel */
         }
         
-        /* Conteneur principal qui recevra le contenu dynamique */
-        #article-content-container { 
-            min-height: 400px; 
-            display: flex; 
-            flex-direction: column; 
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': 'var(--primary-color)',
+                        'secondary': 'var(--secondary-color)',
+                        'accent': 'var(--accent-color)',
+                        'body-bg': 'var(--background-body)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        /* Définition d'une ombre plus professionnelle, moins lourde */
+                        'pro-shadow': '0 10px 30px rgba(0, 0, 0, 0.1)',
+                        'primary-lg': '0 10px 15px -3px rgba(183, 0, 0, 0.2), 0 4px 6px -2px rgba(183, 0, 0, 0.15)',
+                    }
+                }
+            }
         }
 
-        .article-header h1 {
-            font-size: 2.8em; font-weight: 900; color: var(--secondary-color); line-height: 1.1; margin-bottom: 20px;
+        /* Style spécifique pour le corps de l'article pour une meilleure lisibilité */
+        .article-body h2 {
+            /* Séparateur plus marqué et espacement pour les sous-titres */
+            @apply text-3xl font-extrabold mt-10 mb-5 border-b-2 pb-2 border-primary/30 text-secondary;
         }
-
-        .article-meta { color: #777; font-size: 0.9em; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        .article-meta span { margin-right: 15px; font-weight: 500; }
-        .article-meta .category { color: var(--primary-color); font-weight: 700; text-transform: uppercase; }
-
-        .article-cover img { 
-            width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 40px; box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); 
+        .article-body p {
+            /* Interlignage large et espacement entre les paragraphes pour un confort de lecture premium */
+            @apply mb-6 text-xl leading-loose text-gray-700;
         }
-
-        /* Styles pour la lisibilité du corps de l'article */
-        .article-body { font-size: 1.1em; color: var(--text-color); }
-        .article-body p { margin-bottom: 1.5em; text-align: justify; }
-        .article-body h2 { font-size: 1.8em; color: var(--secondary-color); margin-top: 2em; margin-bottom: 0.5em; border-left: 5px solid var(--accent-color); padding-left: 15px; }
-        .article-body ul, .article-body ol { margin-left: 20px; margin-bottom: 1.5em; }
-
-        /* ---------------------------------- */
-        /* SKELETON SCREEN STYLES */
-        /* ---------------------------------- */
-        .skeleton {
-            background-color: var(--skeleton-color);
-            background-image: linear-gradient(90deg, var(--skeleton-color) 0, var(--skeleton-highlight) 40%, var(--skeleton-color) 80%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite reverse;
-            border-radius: 4px;
-            display: inline-block;
-            line-height: 1;
-            width: 100%;
+        .article-body ul {
+            @apply list-disc pl-8 mb-6 space-y-3 text-lg text-gray-700;
         }
-
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .article-body strong {
+            @apply text-secondary font-black;
         }
-
-        /* Styles spécifiques au détail d'article */
-        .skeleton-title-big { height: 40px; width: 85%; margin-bottom: 15px; }
-        .skeleton-meta-line { height: 15px; width: 50%; margin-bottom: 20px; }
-        .skeleton-cover { height: 450px; margin-bottom: 40px; }
-        .skeleton-text-line { height: 18px; margin-bottom: 10px; }
-        .skeleton-text-line-short { width: 90%; }
-        .skeleton-text-line-tiny { width: 70%; }
         
-        /* Responsive */
-        @media (max-width: 768px) {
-            .article-header h1 { font-size: 2em; }
-            .container { padding: 20px; margin: 20px auto; }
-            .article-body { font-size: 1em; }
-            .skeleton-cover { height: 250px; } 
+        /* Amélioration des éléments de métadonnées */
+        .article-metadata > div {
+            @apply divide-x divide-gray-300;
+        }
+        .article-metadata p {
+            @apply px-4 first:pl-0;
+        }
+
+
+        /* Custom animation for the live button */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.3); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .live-pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.2, 0.2, 0, 1) infinite;
         }
     </style>
 </head>
-<body>
+<body class="bg-body-bg text-secondary antialiased">
 
-    <header class="header">
-        <a href="index.html" class="logo" aria-label="Accueil Mikuba TV">Mikuba<span>TV</span></a>
-        <nav role="navigation" aria-label="Menu principal">
-            <ul class="nav-list">
-                <li><a href="index.html" class="nav-link">🏠 Accueil</a></li>
-                <li><a href="index.html#actualites" class="nav-link">📰 Actualités</a></li>
-                <li><a href="index.html#emissions" class="nav-link">🎤 Émissions</a></li>
-            </ul>
-        </nav>
-        <button id="live-btn" role="link">🔴 DIRECT</button>
+    <!-- FIREBASE & TTS LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, limit, getDocs, getDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+
+        // Variables globales Canvas
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mikuba-tv-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db = null;
+        let auth = null;
+        let currentUserId = null;
+        setLogLevel('Debug'); // Activation des logs
+
+        // --- TTS & Audio Helpers ---
+        const base64ToArrayBuffer = (base64) => {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
+            return bytes.buffer;
+        };
+
+        const pcmToWav = (pcm16, sampleRate) => {
+            const numChannels = 1, bytesPerSample = 2;
+            const dataLength = pcm16.length * bytesPerSample;
+            const buffer = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(buffer);
+            let offset = 0;
+            const writeString = (s) => { for (let i = 0; i < s.length; i++) { view.setUint8(offset++, s.charCodeAt(i)); } };
+
+            writeString('RIFF'); view.setUint32(offset, 36 + dataLength, true); offset += 4; writeString('WAVE');
+            writeString('fmt '); view.setUint32(offset, 16, true); offset += 4; view.setUint16(offset, 1, true); offset += 2; 
+            view.setUint16(offset, numChannels, true); offset += 2; view.setUint32(offset, sampleRate, true); offset += 4; 
+            view.setUint32(offset, sampleRate * numChannels * bytesPerSample, true); offset += 4; view.setUint16(offset, numChannels * bytesPerSample, true); offset += 2; 
+            view.setUint16(offset, 16, true); offset += 2; 
+            writeString('data'); view.setUint32(offset, dataLength, true); offset += 4;
+
+            for (let i = 0; i < pcm16.length; i++) { view.setInt16(offset, pcm16[i], true); offset += 2; }
+            return new Blob([view], { type: 'audio/wav' });
+        };
+
+        window.speakNews = async (text, button) => {
+            if (!text || !button) return;
+
+            button.dataset.originalText = button.textContent.trim();
+            button.dataset.originalIcon = button.querySelector('svg')?.outerHTML || '';
+            
+            button.disabled = true;
+            button.innerHTML = '<svg class="w-5 h-5 mr-2 animate-spin text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 12m5.018-7.5l2.427 2.427m0 0l2.427 2.427m-2.427-2.427V21"></path></svg> Lecture en cours...';
+
+            // Limiter le texte pour l'API
+            const cleanText = text.substring(0, 1000).trim();
+
+            const payload = {
+                contents: [{ parts: [{ text: cleanText }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Rasalgethi" } } }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+            try {
+                let response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { throw new Error(`TTS API failed: ${response.statusText}`); }
+
+                const result = await response.json();
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                const restoreButton = () => {
+                    button.disabled = false;
+                    button.innerHTML = button.dataset.originalIcon + ' ' + button.dataset.originalText;
+                };
+
+                if (audioData && mimeType && mimeType.startsWith("audio/L16")) {
+                    const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 24000;
+
+                    const pcmData = base64ToArrayBuffer(audioData);
+                    const pcm16 = new Int16Array(pcmData);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+
+                    const audio = new Audio(audioUrl);
+                    audio.onended = () => {
+                        restoreButton();
+                        URL.revokeObjectURL(audioUrl);
+                    };
+                    audio.onerror = (e) => {
+                        console.error('Audio playback error:', e);
+                        button.innerHTML = '❌ Lecture échouée';
+                        setTimeout(restoreButton, 3000);
+                        URL.revokeObjectURL(audioUrl);
+                    };
+
+                    await Tone.start();
+                    audio.play();
+
+                } else {
+                    console.error("Erreur: Données audio non valides ou format incorrect.", result);
+                    button.innerHTML = '❌ Erreur audio';
+                    setTimeout(restoreButton, 3000);
+                }
+
+            } catch (error) {
+                console.error("Erreur Gemini TTS:", error);
+                button.innerHTML = '❌ Erreur TTS';
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = button.dataset.originalIcon + ' ' + button.dataset.originalText;
+                }, 3000);
+            }
+        };
+
+
+        // --- Firestore MOCK DATA (Enrichi pour l'article détaillé) ---
+        const dbPath = (collectionName) => { return `/artifacts/${appId}/public/data/${collectionName}`; };
+
+        const MOCK_NEWS = [
+            {
+                id: 'une-principale',
+                title: "Lualaba : Inauguration de la nouvelle centrale hydroélectrique par le gouverneur. Quel impact sur l'exploitation minière à Kolwezi ?",
+                category: "ÉCONOMIE & RDC",
+                summary: "La crise énergétique dans le Grand Katanga pourrait bientôt être un lointain souvenir. Cette nouvelle infrastructure promet une augmentation significative de la production minière, source de tensions et d'espoirs pour la population.",
+                content: `Le projet de la centrale de Nzilo, longtemps en suspens, a finalement été achevé après trois années de travaux intensifs. Financée par un consortium de banques internationales et d'entreprises minières chinoises, cette centrale représente une étape majeure dans la sécurisation de l'approvisionnement électrique dans le Lualaba.
+                
+                <h2>Un boost pour l'industrie minière</h2>
+                L'objectif principal est de fournir une électricité stable aux grandes compagnies de cobalt et de cuivre. L'instabilité du réseau a coûté des millions de dollars aux exploitants, forçant souvent l'arrêt des opérations. Avec une capacité installée annoncée de 350 MW, la centrale devrait éliminer les délestages dans la zone industrielle.
+                
+                Cependant, l'accès des ménages reste la question centrale. Des ONG locales ont interpellé le gouverneur sur la nécessité d'une politique de distribution équitable. "Nous produisons l'énergie, mais nos quartiers restent dans le noir. Il est temps que cette richesse profite à tous les habitants de Kolwezi", a déclaré un représentant de la société civile.
+                
+                <h2>Les défis sociaux et environnementaux</h2>
+                La construction a entraîné le déplacement de plusieurs familles, et les promesses de compensation tardent à se concrétiser. De plus, les études d'impact environnemental sur la faune aquatique de la rivière Lualaba suscitent des inquiétudes. Le gouvernement provincial a promis un suivi rigoureux et la mise en place d'un fonds de développement local pour amortir les chocs sociaux.
+                
+                En conclusion, si la nouvelle centrale est une bénédiction économique, elle est également un test pour la gouvernance locale en matière de redistribution des richesses.`,
+                imageUrl: "https://placehold.co/1200x600/B70000/FFFFFF?text=UNE+Centrale+Hydroélectrique+Kolwezi",
+                author: "Jean-Pierre Tshimanga",
+                views: 18500,
+                timestamp: Date.now(),
+                is_featured: true
+            },
+            { id: 'sec-1', title: "Sécurité : Bilan des opérations FARDC dans le Tanganyika, retour au calme à Manono. Les défis de la paix durable.", category: "SÉCURITÉ", imageUrl: "https://placehold.co/400x200/0F0F10/FFFFFF?text=FARDC+Tanganyika", views: 4200, timestamp: Date.now() - 3600000, is_featured: false, author: "Rédaction Mikuba TV" },
+            { id: 'sec-2', title: "Tensions politiques à Kinshasa : Le Parlement vote un nouveau code électoral controversé.", category: "POLITIQUE", imageUrl: "https://placehold.co/400x200/008CBA/FFFFFF?text=Parlement+RDC", views: 11200, timestamp: Date.now() - 7200000, is_featured: false, author: "Félix K." },
+            { id: 'sec-3', title: "Chine-Afrique : Nouvel accord d'investissement de 5 milliards dans les infrastructures routières en RDC.", category: "INTERNATIONAL", imageUrl: "https://placehold.co/400x200/B70000/FFFFFF?text=Accord+Chine-RDC", views: 5500, timestamp: Date.now() - 10800000, is_featured: false, author: "Service Éco" },
+            { id: 'sec-4', title: "Culture : Le Festival de Kolwezi célèbre les artistes locaux, grand succès populaire. Focus sur la danse traditionnelle.", category: "SOCIÉTÉ", imageUrl: "https://placehold.co/400x200/0F0F10/FFFFFF?text=Festival+Kolwezi", views: 2100, timestamp: Date.now() - 14400000, is_featured: false, author: "Josée M." }
+        ];
+
+        // --- RENDER & AUTH LOGIC ---
+
+        const initializeAndPopulate = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Authentification
+                if (initialAuthToken) { await signInWithCustomToken(auth, initialAuthToken); } else { await signInAnonymously(auth); }
+
+                const newsCollectionRef = collection(db, dbPath('news'));
+                
+                // Check and set initial News data
+                if ((await getDocs(query(newsCollectionRef, limit(1)))).empty) {
+                    await Promise.all(MOCK_NEWS.map(item => setDoc(doc(db, dbPath('news'), item.id), item)));
+                    console.log("Données d'actualité de démonstration ajoutées.");
+                }
+
+                // Lancement des écouteurs Firestore après l'authentification
+                onAuthStateChanged(auth, (user) => {
+                    currentUserId = user ? user.uid : crypto.randomUUID();
+                    loadArticle('une-principale'); // Charger l'article par défaut
+                    loadRelatedAndTrending();
+                });
+
+            } catch (error) {
+                console.error("Erreur critique Firebase:", error);
+                document.getElementById('article-content-container').innerHTML =
+                    '<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-xl shadow-md mt-6 col-span-full"><h3>Erreur Critique!</h3><p>Impossible de charger l\'article. Vérifiez la console (F12) et l\'état de la base de données.</p></div>';
+            }
+        };
+
+        const loadArticle = async (articleId) => {
+            if (!db) return;
+            const docRef = doc(db, dbPath('news'), articleId);
+            
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    renderArticle(docSnap.data());
+                } else {
+                    document.getElementById('article-content-container').innerHTML = `<div class="bg-white p-12 text-center rounded-xl shadow-xl"><h3 class="text-3xl font-black text-primary">Article Non Trouvé</h3><p class="text-gray-600">L'identifiant d'article spécifié n'existe pas ou la base de données est vide.</p></div>`;
+                }
+            } catch (error) {
+                console.error("Erreur de chargement de l'article:", error);
+            }
+        };
+
+        const renderArticle = (article) => {
+            document.title = `${article.title.substring(0, 50)}... | MIKUBA TV`;
+            const container = document.getElementById('article-content-container');
+            if (!container || !article) return;
+
+            // Structure pour la lecture TTS
+            const fullTextForTTS = `${article.title}. ${article.summary}. ${article.content.replace(/<[^>]*>?/gm, ' ')}`;
+
+            container.innerHTML = `
+                <div class="bg-white p-6 md:p-10 rounded-2xl shadow-pro-shadow">
+                    <span class="inline-block px-4 py-1.5 text-sm font-black bg-primary text-white rounded-full mb-4 uppercase shadow-lg">${article.category}</span>
+                    <h1 class="text-4xl md:text-6xl font-extrabold mb-5 leading-snug text-secondary">${article.title}</h1>
+                    <p class="text-2xl italic text-gray-700 border-l-4 border-accent pl-4 mb-8">${article.summary}</p>
+                    
+                    <div class="article-metadata flex items-center justify-between border-y py-4 mb-8 border-gray-200 text-gray-500 text-sm font-medium">
+                        <div class="flex items-center space-x-0">
+                            <p>Par <strong>${article.author}</strong></p>
+                            <p>Publié le <strong>${new Date(article.timestamp).toLocaleDateString('fr-FR')}</strong></p>
+                            <p class="flex items-center"><svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg> ${article.views.toLocaleString('fr-FR')} vues</p>
+                        </div>
+                    </div>
+
+                    <img src="${article.imageUrl}" alt="Image principale de l'article" class="w-full h-auto max-h-[600px] object-cover rounded-xl mb-10 shadow-xl bg-gray-200" onerror="this.onerror=null;this.src='https://placehold.co/1200x600/B70000/FFFFFF?text=IMAGE+INDISPONIBLE'">
+                    
+                    <!-- Bouton "Qui Parle" (TTS Feature) -->
+                    <div class="mb-10 flex justify-center">
+                        <button id="tts-button" data-full-text="${fullTextForTTS.replace(/"/g, '&quot;')}" data-original-text="Lire l'article à voix haute (IA)" data-original-icon='<svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 3a1 1 0 00-1.447-.894L8.717 5.97A.75.75 0 008 6.643v5.994c0 .354.296.65.643.717l7.836 4.673A1 1 0 0018 17V3z" clip-rule="evenodd"></path></svg>'
+                                class="flex items-center bg-accent text-white font-bold py-3 px-8 rounded-full shadow-2xl shadow-accent/50 hover:bg-opacity-90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01]">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 3a1 1 0 00-1.447-.894L8.717 5.97A.75.75 0 008 6.643v5.994c0 .354.296.65.643.717l7.836 4.673A1 1 0 0018 17V3z" clip-rule="evenodd"></path></svg>
+                            Lire l'article à voix haute (IA)
+                        </button>
+                    </div>
+
+                    <!-- Corps de l'Article -->
+                    <div class="article-body">
+                        ${article.content}
+                    </div>
+
+                    <!-- Tags et Partage -->
+                    <div class="mt-12 pt-8 border-t border-gray-300 flex flex-wrap items-center justify-between">
+                        <div class="flex space-x-3 flex-wrap gap-y-2">
+                            <span class="text-gray-500 font-bold mr-2">Mots-clés:</span>
+                            <span class="text-sm bg-gray-200 text-secondary px-4 py-1.5 rounded-full hover:bg-primary/20 cursor-pointer font-medium">Lualaba</span>
+                            <span class="text-sm bg-gray-200 text-secondary px-4 py-1.5 rounded-full hover:bg-primary/20 cursor-pointer font-medium">Énergie</span>
+                            <span class="text-sm bg-gray-200 text-secondary px-4 py-1.5 rounded-full hover:bg-primary/20 cursor-pointer font-medium">Kolwezi</span>
+                        </div>
+                        <button class="flex items-center bg-accent text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-accent/90 transition-colors duration-200 mt-6 md:mt-0 shadow-lg shadow-accent/40">
+                            Partager l'article
+                            <svg class="w-5 h-5 ml-2" fill="currentColor" viewBox="0 0 20 20"><path d="M15 8a3 3 0 10-2.43 1.15l-4.22 2.5a3 3 0 00-1.37.04l-4.22-2.5A3 3 0 102 11c-.02 0-.04 0-.06 0l4.22 2.5a3 3 0 004.22-.04l4.22-2.5A3 3 0 1015 8z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Réattacher l'événement TTS
+            const ttsButton = document.getElementById('tts-button');
+            if (ttsButton) {
+                // Utilisez le contenu de l'attribut data-full-text
+                ttsButton.addEventListener('click', () => window.speakNews(ttsButton.dataset.fullText, ttsButton));
+            }
+        };
+
+        const loadRelatedAndTrending = () => {
+             if (!db) return;
+            const newsCollectionRef = collection(db, dbPath('news'));
+            const q = query(newsCollectionRef);
+
+            onSnapshot(q, (snapshot) => {
+                let allNews = [];
+                snapshot.forEach((doc) => { allNews.push({ id: doc.id, ...doc.data() }); });
+                
+                // Exclure l'article principal et trier par vues pour la tendance
+                const currentArticleId = 'une-principale'; // Simuler l'article actuel
+                const relatedNews = allNews.filter(item => item.id !== currentArticleId)
+                                            .sort((a, b) => b.views - a.views)
+                                            .slice(0, 4);
+
+                renderRelatedNews(relatedNews);
+            }, (error) => {
+                console.error("Erreur onSnapshot Related News:", error);
+            });
+        };
+        
+        const renderRelatedNews = (articles) => {
+            const container = document.getElementById('related-articles-container');
+            if (!container) return;
+            if (articles.length === 0) { container.innerHTML = '<li><span class="text-gray-500">Pas d\'articles connexes.</span></li>'; return; }
+
+            container.innerHTML = articles.map(article => `
+                <div class="bg-white rounded-xl shadow-lg p-4 border-l-4 border-primary/70 hover:shadow-xl transition-all duration-300 cursor-pointer mb-4">
+                    <h4 class="text-base font-bold text-secondary hover:text-primary transition-colors duration-200 line-clamp-3">${article.title}</h4>
+                    <p class="text-xs text-gray-500 mt-1">${article.category} | ${new Date(article.timestamp).toLocaleDateString('fr-FR')}</p>
+                </div>
+            `).join('');
+        };
+
+
+        // --- Initialisation au chargement du DOM ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            initializeAndPopulate();
+        });
+    </script>
+    
+    <!-- TOP BAR - Live Status, Date & Location -->
+    <div class="bg-secondary text-gray-300 text-sm py-2 px-4 shadow-xl border-b border-gray-700">
+        <div class="max-w-7xl mx-auto flex justify-between items-center font-medium">
+            <span class="flex items-center text-primary font-bold tracking-wider">
+                <span class="relative flex h-3 w-3 mr-2">
+                    <span class="live-pulse-ring absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+                </span>
+                LIVE : EN COURS
+            </span>
+            <div class="flex items-center space-x-6">
+                <span class="hidden sm:flex items-center text-gray-400">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                    KOLWEZI, LUALABA (RDC)
+                </span>
+                <span id="current-date" class="flex items-center text-gray-400">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
+                    Chargement...
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER - Logo and Main Navigation -->
+    <header class="bg-white py-5 shadow-xl sticky top-0 z-20 border-b-2 border-primary/20">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+            <div class="logo text-5xl font-black text-secondary tracking-tight">
+                MIKUBA<span class="text-primary text-6xl font-extrabold ml-0.5">TV</span>
+            </div>
+            <nav class="hidden lg:flex space-x-8">
+                <a href="index.html" class="text-secondary font-bold uppercase text-sm tracking-wider hover:text-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-primary">Accueil</a>
+                <a href="#" class="text-secondary font-bold uppercase text-sm tracking-wider hover:text-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-primary">RDC / Lualaba</a>
+                <a href="#" class="text-secondary font-bold uppercase text-sm tracking-wider hover:text-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-primary">International</a>
+                <a href="#" class="text-secondary font-bold uppercase text-sm tracking-wider hover:text-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-primary">Économie</a>
+                <a href="#" class="text-secondary font-bold uppercase text-sm tracking-wider hover:text-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-primary">Sport</a>
+                <a href="#" class="text-accent font-black uppercase text-sm tracking-wider transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-accent">Contact Pro</a>
+            </nav>
+            <!-- Search & Mobile Menu -->
+            <div class="flex items-center space-x-4">
+                <button class="text-secondary hover:text-primary p-3 rounded-full bg-gray-100 transition-colors shadow-inner hidden sm:block">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </button>
+                <button class="lg:hidden text-2xl text-secondary hover:text-primary p-3 rounded-lg bg-gray-100 transition-colors shadow-inner font-bold">☰</button>
+            </div>
+        </div>
     </header>
 
-    <main class="container" id="article-content-container">
-        <div class="article-header skeleton-loader">
-            <div class="skeleton skeleton-title-big"></div>
-            <div class="skeleton skeleton-meta-line"></div>
-        </div>
+
+    <!-- MAIN CONTAINER - Article & Related Content -->
+    <main class="max-w-7xl mx-auto p-4 mt-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
-        <figure class="article-cover skeleton-loader">
-            <div class="skeleton skeleton-cover"></div>
-        </figure>
-        
-        <div class="article-body skeleton-loader">
-            <div class="skeleton skeleton-text-line"></div>
-            <div class="skeleton skeleton-text-line"></div>
-            <div class="skeleton skeleton-text-line skeleton-text-line-short"></div>
-            <br>
-            <div class="skeleton skeleton-text-line"></div>
-            <div class="skeleton skeleton-text-line skeleton-text-line-tiny"></div>
-            <div class="skeleton skeleton-text-line"></div>
-        </div>
+        <!-- COLUMN 1: CONTENU PRINCIPAL DE L'ARTICLE (3/4 sur desktop) -->
+        <section id="article-content-container" class="lg:col-span-3">
+            <!-- Contenu chargé par JavaScript -->
+            <div class="bg-white rounded-2xl p-12 text-center shadow-pro-shadow">
+                <h3 class="text-3xl font-black text-primary animate-pulse">Chargement de l'article...</h3>
+                <p class="text-gray-500 mt-2">Récupération des données via Firestore.</p>
+            </div>
+        </section>
+
+        <!-- COLUMN 2: SIDEBAR DROITE (Articles Connexes & Publicité - Sticky) -->
+        <aside class="lg:col-span-1 h-fit sticky top-[100px]">
+            
+            <!-- Articles Connexes / Tendance -->
+            <h2 class="text-xl font-extrabold pb-2 mb-4 tracking-tight border-b-4 border-accent text-secondary">À LIRE AUSSI</h2>
+            <div id="related-articles-container" class="space-y-4">
+                <!-- Articles Connexes chargés par JavaScript -->
+            </div>
+            
+            <!-- Espace Publicitaire Mock -->
+            <div class="mt-8 p-6 bg-white rounded-xl text-center border-4 border-dashed border-gray-300 shadow-xl">
+                <p class="text-sm font-black text-gray-700">PUBLICITÉ 300x600</p>
+                <p class="text-xs text-gray-500 mt-1">Soutenez MIKUBA TV</p>
+            </div>
+        </aside>
 
     </main>
 
-    <footer class="footer">
-        <ul class="footer-nav">
-            <li><a href="#">Qui sommes-nous ?</a></li>
-            <li><a href="#">Contact Rédaction</a></li>
-            <li><a href="#">Mentions Légales</a></li>
-        </ul>
-        <p style="color: #999; font-size: 0.8em;">&copy; 2025 Mikuba TV. Tous droits réservés.</p>
+    <!-- FOOTER -->
+    <footer class="text-center py-10 px-4 mt-16 bg-secondary text-gray-400 border-t-8 border-primary shadow-inner">
+        <div class="max-w-7xl mx-auto">
+            <div class="logo text-4xl font-black text-white mb-6">
+                MIKUBA<span class="text-primary text-5xl font-extrabold ml-0.5">TV</span>
+            </div>
+            <div class="flex flex-col md:flex-row justify-center space-y-3 md:space-y-0 md:space-x-12 mb-6 font-semibold text-sm tracking-wider">
+                <a href="#" class="hover:text-white transition-colors duration-200">À Propos | Qui Sommes-Nous</a>
+                <a href="#" class="hover:text-white transition-colors duration-200">Publicité & Partenariats</a>
+                <a href="#" class="hover:text-white transition-colors duration-200">Charte Éditoriale</a>
+                <a href="#" class="hover:text-white transition-colors duration-200">Recrutement & Carrières</a>
+            </div>
+            <p class="text-xs mt-6 text-gray-500">MIKUBA TV Kolwezi | La Voix du Lualaba. &copy; 2025 Tous droits réservés.</p>
+        </div>
     </footer>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('live-btn').addEventListener('click', () => {
-                // Vous devrez définir où le bouton 'DIRECT' mène réellement
-                window.location.href = 'index.html#live-section'; 
-            });
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            const articleId = urlParams.get('id');
 
-            // Vérifie si l'ID est présent et si la fonction d'affichage est disponible (chargée par setup.js)
-            if (articleId && typeof loadArticle === 'function') {
-                loadArticle(articleId);
-            } else {
-                const container = document.getElementById('article-content-container');
-                // Supprime le skeleton avant d'afficher un message d'erreur
-                container.innerHTML = '';
-                
-                if (typeof displayArticleError === 'function') {
-                    displayArticleError("ID d'article manquant dans l'adresse (URL) ou article non spécifié.");
-                } else {
-                    // Message de secours si même displayArticleError n'est pas chargée
-                    container.innerHTML = '<p style="text-align: center; margin-top: 50px; color: red;">Erreur Critique : ID non trouvé ou librairie de chargement manquante.</p>';
-                }
-            }
-        });
-    </script>
 </body>
 </html>
