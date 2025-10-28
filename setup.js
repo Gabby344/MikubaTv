@@ -6,21 +6,22 @@
 // ----------------------------------------------------
 // ÉTAPE 1 : CONFIGURATION ET INITIALISATION DE FIREBASE
 // ----------------------------------------------------
-// REMPLACER LES VALEURS PAR VOS VRAIES CLÉS !
+
 const firebaseConfig = {
-    apiKey: "AIzaSyAiMnvIMBqn2VqSQsFpb-Ajx5VORVd0JoA", // ⚠️ UTILISEZ VOTRE VRAIE CLÉ
-    authDomain: "danicakakudji.firebaseapp.com",
-    projectId: "danicakakudji",
-    storageBucket: "danicakakudji.firebasestorage.app", // Mis à jour avec votre valeur
-    messagingSenderId: "409346091245",
-    appId: "1:409346091245:web:6674becbc81d97c292c4e4"
+    // 🔑 CLÉS MISES À JOUR AVEC VOS VRAIES VALEURS
+    apiKey: "AIzaSyCQWUPt2d5RaPvPfSqgi4oU-VxMpL6STvQ",
+    authDomain: "shekinahmukeni-74b9d.firebaseapp.com",
+    projectId: "shekinahmukeni-74b9d",
+    storageBucket: "shekinahmukeni-74b9d.firebasestorage.app", 
+    messagingSenderId: "351153147633",
+    appId: "1:351153147633:web:c82d85f1ad9a79d6ed6350"
 };
 
-// Vérification et Initialisation de l'application Firebase
+// Vérification et Initialisation de l'application Firebase (v8 format)
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     try {
         firebase.initializeApp(firebaseConfig);
-        console.log("Firebase initialisé avec succès !");
+        console.log("Firebase initialisé avec succès pour le projet shekinahmukeni !");
     } catch (e) {
         console.error("Erreur critique lors de l'initialisation de Firebase:", e);
     }
@@ -29,24 +30,16 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
 // Référence à la base de données Realtime
 const database = typeof firebase !== 'undefined' ? firebase.database() : null; 
 
-// --- DÉBOGAGE CRITIQUE SUPPLÉMENTAIRE ---
-if (typeof firebase === 'undefined') {
-    console.error("CRITIQUE: L'objet 'firebase' n'est pas défini. Vérifiez que les deux balises CDN (firebase-app.js et firebase-database.js) sont correctement chargées DANS admin.html.");
-}
-// ---------------------------------------
-
 // ----------------------------------------------------
 // FONCTION DE PUBLICATION (Pour admin.html)
 // ----------------------------------------------------
 
 /**
  * Publie un nouvel article sur Firebase.
- * Cette fonction DOIT être déclarée globalement pour que admin.html la trouve.
  */
 function publishArticle(articleData, btn, form, statusMessage) {
     
     if (!database) {
-        // Affiche une erreur si la base de données n'a pas pu être initialisée
         statusMessage.textContent = '❌ Erreur: Base de données non connectée. Vérifiez les clés API et les CDN.';
         statusMessage.classList.add('error');
         statusMessage.style.display = 'block';
@@ -97,7 +90,10 @@ function publishArticle(articleData, btn, form, statusMessage) {
 // ----------------------------------------------------
 // FONCTIONS UTILITAIRES POUR L'AFFICHAGE (index.html, article.html)
 // ----------------------------------------------------
-// (Fonctions loadNews, loadArticle, insertNewsCard, displayArticleError inchangées)
+
+/**
+ * Insère une carte d'article dans le conteneur spécifié (pour index.html).
+ */
 function insertNewsCard(article, articleId, containerId, isMajor = false) {
     const container = document.getElementById(containerId);
     if (!container) return; 
@@ -135,13 +131,17 @@ function insertNewsCard(article, articleId, containerId, isMajor = false) {
     }
 }
 
+/**
+ * Affiche un message d'erreur clair dans la zone de l'article (pour article.html).
+ */
 function displayArticleError(message) {
     const container = document.getElementById('article-content-container');
     if (!container) return;
     
+    // Supprime tout le contenu actuel (y compris le skeleton)
     container.innerHTML = `
         <div style="text-align: center; margin-top: 50px; color: var(--primary-color);">
-            <h2 style="font-size: 2em; border-bottom: none;">📰 Erreur de Chargement</h2>
+            <h2 style="font-size: 2em; border-bottom: none; font-weight: 700;">📰 Erreur de Chargement</h2>
             <p style="font-size: 1.1em; margin-top: 20px;">${message}</p>
             <p style="margin-top: 30px;"><a href="index.html">Retour à la page d'accueil</a></p>
         </div>
@@ -150,6 +150,9 @@ function displayArticleError(message) {
     if (pageTitle) pageTitle.textContent = "Erreur - Mikuba TV";
 }
 
+/**
+ * Charge les articles de la base de données pour la page d'accueil (index.html).
+ */
 function loadNews() {
     if (!database) return;
     const newsRef = database.ref('articles').orderByChild('timestamp').limitToLast(10); 
@@ -181,7 +184,7 @@ function loadNews() {
              if (secondaryContainer) secondaryContainer.innerHTML = ''; 
              secondaryArticles.forEach(article => {
                  insertNewsCard(article, article.id, 'secondary-news-container', false);
-            });
+             });
         } else if (articles.length > 0) {
             if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; font-style: italic; color: #777;">Seul un article principal est disponible.</p>';
         } else {
@@ -211,6 +214,9 @@ function loadNews() {
     });
 }
 
+/**
+ * Charge un article spécifique par ID (pour article.html).
+ */
 function loadArticle(articleId) {
     if (!database) {
         displayArticleError("Erreur de connexion à la base de données Firebase.");
@@ -228,11 +234,14 @@ function loadArticle(articleId) {
             return;
         }
         
+        // 1. Mise à jour du titre de la page
         const pageTitle = document.querySelector('title');
         if (pageTitle) pageTitle.textContent = `${article.title} - Mikuba TV`;
 
         const articleContent = article.body || '<p>Le corps complet de l\'article n\'est pas disponible. Veuillez vérifier les données dans Firebase.</p>';
-
+        const defaultImage = 'https://via.placeholder.com/900x500/CCCCCC/666666?text=Image+Manquante';
+        
+        // 2. Construction du HTML final
         const articleHTML = `
             <div class="article-header">
                 <h1>${article.title}</h1>
@@ -244,7 +253,7 @@ function loadArticle(articleId) {
             </div>
             
             <figure class="article-cover">
-                <img src="${article.imageUrl || 'https://via.placeholder.com/900x500/CCCCCC/666666?text=Image+Manquante'}" alt="Image de couverture pour ${article.title}">
+                <img src="${article.imageUrl || defaultImage}" alt="Image de couverture pour ${article.title}">
             </figure>
             
             <div class="article-body">
@@ -252,9 +261,8 @@ function loadArticle(articleId) {
             </div>
         `;
         
+        // 3. Injection du contenu final (écrase le skeleton dans article.html)
         if (container) {
-            const statusIndicator = container.querySelector('[role="status"]');
-            if (statusIndicator) statusIndicator.remove(); 
             container.innerHTML = articleHTML;
         }
         
