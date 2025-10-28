@@ -5,330 +5,334 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mikuba TV - Administration des Articles PRO</title>
     
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    
-    <!-- ⚠️ CORRECTION CRITIQUE : Utilisation des CDN Firebase v8 (standard pour firebase.initializeApp) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
-    <style>
-        /* Styles CSS Pro (Basé sur Inter et un thème Bleu/Gris Moderne) */
-        :root {
-            --primary-color: #0077B6; /* Bleu Profond et Pro */
-            --secondary-color: #4A4E69; /* Gris Sophistiqué */
-            --accent-color: #48A9A6; /* Teal pour l'accent */
-            --text-color: #2D2A32;
-            --light-bg: #F8F9FA;
-            --card-bg: #FFFFFF;
-            --shadow-subtle: 0 2px 10px rgba(0, 0, 0, 0.05);
-            --border-radius: 12px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--light-bg); padding: 30px 20px; color: var(--text-color); }
 
-        .container {
-            max-width: 1200px; margin: 0 auto;
+    <style>
+        /* Configuration de base et personnalisation Tailwind */
+        :root {
+            --primary-color: #B70000; /* Rouge Profond Mikuba */
+            --secondary-color: #0F0F10; /* Noir Rich */
+            --accent-color: #008CBA; /* Bleu Cyber Électrique (pour les liens/actions) */
+            --background-body: #F0F2F5; /* Gris clair de fond professionnel */
         }
         
-        /* Layout Grid pour Formulaire + Preview (Deux colonnes sur grand écran) */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 40px;
-            background-color: var(--card-bg);
-            padding: 40px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-subtle);
-        }
-        @media (min-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 2fr 1fr;
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': 'var(--primary-color)',
+                        'secondary': 'var(--secondary-color)',
+                        'accent': 'var(--accent-color)',
+                        'body-bg': 'var(--background-body)',
+                        'sophisticated-gray': '#4A4E69', /* Gris utilisé pour le texte secondaire */
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'form-card': '0 10px 30px rgba(0, 0, 0, 0.05)',
+                        'input-focus': '0 0 0 3px rgba(183, 0, 0, 0.2)', /* Ombre de focus subtile */
+                    }
+                }
             }
         }
-
-        h1 { 
-            font-size: 2.2em; color: var(--primary-color); margin-bottom: 10px; 
-            font-weight: 900;
-        }
-        .subtitle {
-            font-size: 1.1em; color: var(--secondary-color); margin-bottom: 30px;
-        }
-        
-        /* Formulaire */
-        .form-section {
-            padding-right: 20px;
-        }
-        .form-group { margin-bottom: 25px; }
-        label { 
-            display: block; margin-bottom: 8px; font-weight: 700; 
-            color: var(--secondary-color); font-size: 0.95em;
-        }
-        input[type="text"], input[type="url"], textarea, select {
-            width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: var(--border-radius);
-            font-size: 1em; transition: all 0.3s; background-color: #FFFFFF;
-        }
-        input:disabled, textarea:disabled {
-            background-color: #ECEFF1; /* Gris clair pour indiquer qu'ils sont désactivés */
-            cursor: not-allowed;
-        }
-        input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus { 
-            border-color: var(--primary-color); 
-            box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.15); 
-            outline: none; 
-        }
+    
+        /* Styles CSS natifs pour les ajustements fins non couverts par Tailwind */
         textarea { resize: vertical; min-height: 250px; }
-        select { appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230077B6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        
+        /* Personnalisation de l'apparence du select pour un look plus pro */
+        select { 
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B70000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: right 15px center;
             background-size: 1em;
         }
 
-        /* Bouton Publier */
-        #publish-btn {
-            background-color: var(--primary-color); color: white; padding: 15px 30px;
-            border: none; border-radius: var(--border-radius); font-weight: 700; font-size: 1.1em;
-            cursor: pointer; transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
-            box-shadow: 0 5px 15px rgba(0, 119, 182, 0.3);
-            width: 100%;
-            margin-top: 10px;
-        }
-        #publish-btn:hover:not([disabled]) { 
-            background-color: #005A8D; 
-            transform: translateY(-2px); 
-            box-shadow: 0 7px 18px rgba(0, 119, 182, 0.4);
-        }
-        #publish-btn:disabled {
-            background-color: #B0BEC5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        /* Message de statut */
-        #status-message {
-            margin-top: 30px; padding: 15px; border-radius: 8px; font-weight: 600;
-            font-size: 1em;
-            display: none; 
-            text-align: center;
-        }
-        .success { background-color: #E6FFFA; color: #38A169; border: 1px solid #9AE6B4; }
-        .error { background-color: #FED7D7; color: #C53030; border: 1px solid #FEB2B2; }
-
-        /* ------------------------------------------- */
-        /* SECTION PRÉVISUALISATION EN DIRECT */
-        /* ------------------------------------------- */
-        .preview-section {
-            padding: 20px;
-            background-color: #e3f2fd; /* Couleur d'arrière-plan douce */
-            border-radius: var(--border-radius);
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
-            min-height: 400px;
-            position: sticky; 
-            top: 20px;
-        }
-        .preview-section h2 {
-            font-size: 1.4em;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary-color);
-            text-align: center;
-        }
-        
-        .preview-card {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: var(--shadow-subtle);
-        }
-        .preview-card img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            background-color: #ddd;
-            display: block;
-        }
-        .preview-content {
-            padding: 15px;
-        }
-        .preview-content .meta {
-            font-size: 0.75em;
-            color: #999;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-        .preview-content h3 {
-            font-size: 1.1em;
-            font-weight: 700;
-            color: var(--text-color);
-            margin-bottom: 10px;
-            min-height: 25px; 
-        }
-        .preview-content p {
-            font-size: 0.9em;
-            color: var(--secondary-color);
-            line-height: 1.4;
-            min-height: 40px; 
-        }
-
     </style>
 </head>
-<body>
+<body class="bg-body-bg text-secondary antialiased p-5 md:p-10">
 
-    <div class="container">
-        <h1>🛠️ Tableau de Bord - Publication d'Articles</h1>
-        <p class="subtitle">Créez et prévisualisez votre nouvelle actualité pour Mikuba TV.</p>
+    <!-- FIREBASE & LOGIC JS -->
+    <script type="module">
+        // Import des modules Firebase modernes (v10/v11)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+        import { getFirestore, doc, collection, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+
+        // Variables globales Canvas (MANDATORY)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mikuba-tv-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db = null;
+        let auth = null;
+        let currentUserId = null;
         
-        <p style="margin-bottom: 20px;"><a href="index.html" style="color: var(--accent-color); font-weight: 600;">← Retour à l'accueil du site</a></p>
-        
-        <div class="main-grid">
-            <div class="form-section">
-                <form id="article-form">
-                    <div class="form-group">
-                        <label for="title">Titre de l'Article <span style="color: var(--primary-color);">*</span></label>
-                        <input type="text" id="title" placeholder="Titre principal impactant (max. 100 chars)" maxlength="100" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="summary">Résumé (pour la carte d'accueil - max. 160 chars) <span style="color: var(--primary-color);">*</span></label>
-                        <input type="text" id="summary" placeholder="Description courte pour accrocher le lecteur." maxlength="160" required>
-                    </div>
+        setLogLevel('Debug');
 
-                    <div class="form-group">
-                        <label for="imageUrl">URL de l'Image de Couverture <span style="color: var(--primary-color);">*</span></label>
-                        <input type="url" id="imageUrl" placeholder="Ex: https://votresite.com/images/article1.jpg" required>
-                    </div>
+        // Initialisation de Firebase
+        const initializeFirebase = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
 
-                    <div class="form-group">
-                        <label for="category">Catégorie <span style="color: var(--primary-color);">*</span></label>
-                        <select id="category" required>
-                            <option value="" disabled selected>Sélectionnez une catégorie</option>
-                            <option value="Politique">Politique</option>
-                            <option value="Économie">Économie</option>
-                            <option value="Social">Social</option>
-                            <option value="Sport">Sport</option>
-                            <option value="Sécurité">Sécurité</option>
-                            <option value="Culture">Culture</option>
-                            <option value="Général">Général</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="author">Auteur</label>
-                        <!-- Rendre le champ optionnel si l'on veut utiliser la valeur par défaut de JS -->
-                        <input type="text" id="author" value="Rédaction Mikuba TV" placeholder="Nom du journaliste ou de l'équipe de rédaction">
-                    </div>
+                // Authentification
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                onAuthStateChanged(auth, (user) => {
+                    currentUserId = user ? user.uid : crypto.randomUUID();
+                    console.log(`Firebase initialisé. User ID: ${currentUserId}`);
+                    // Activation du bouton si l'authentification est prête
+                    document.getElementById('publish-btn').disabled = false;
+                });
 
-                    <div class="form-group">
-                        <label for="body">Corps de l'Article (Contenu intégral) <span style="color: var(--primary-color);">*</span></label>
-                        <textarea id="body" placeholder="Commencez à rédiger ici. Utilisez des balises HTML de base (<h2>, <p>, <ul>, <ol>) pour la mise en forme. Attention : les balises HTML seront insérées directement dans la base de données !" required></textarea>
-                    </div>
+            } catch (error) {
+                console.error("Erreur critique Firebase:", error);
+                document.getElementById('status-message').textContent = '❌ Erreur de connexion à la base de données. Vérifiez la console.';
+                document.getElementById('status-message').classList.add('error', 'block');
+            }
+        };
 
-                    <button type="submit" id="publish-btn">Publier l'Article</button>
-                </form>
+        // Fonction pour obtenir le chemin de collection publique
+        const dbPath = (collectionName) => { 
+            return `/artifacts/${appId}/public/data/${collectionName}`; 
+        };
 
-                <div id="status-message"></div>
-            </div>
+        /**
+         * Fonction de publication d'article vers Firestore.
+         */
+        window.publishArticle = async (articleData, button, form, statusElement) => {
+            if (!db) {
+                statusElement.textContent = '❌ Base de données non initialisée.';
+                statusElement.className = 'error block';
+                return;
+            }
 
-            <div class="preview-section">
-                <h2>Aperçu de la Carte d'Actualité</h2>
-                <div class="preview-card">
-                    <img id="preview-image" src="https://via.placeholder.com/300x180/E0E0E0/666666?text=Image+de+couverture" alt="Aperçu de l'image">
-                    <div class="preview-content">
-                        <p class="meta"><span id="preview-category">GÉNÉRAL</span> | Aujourd'hui</p>
-                        <h3 id="preview-title">Titre de l'Article...</h3>
-                        <p id="preview-summary">Le résumé de l'article sera affiché ici pour voir comment il apparaît sur la page d'accueil.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+            button.disabled = true;
+            statusElement.style.display = 'none';
 
-    <script>
-        const DEFAULT_IMAGE = "https://via.placeholder.com/300x180/E0E0E0/666666?text=Image+de+couverture";
+            try {
+                // Construction de l'objet de données final
+                const dataToSave = {
+                    ...articleData,
+                    timestamp: Date.now(),
+                    views: 0,
+                    author: articleData.author || 'Rédaction Mikuba TV',
+                    is_featured: false, // Par défaut, non mis en avant
+                };
+                
+                // On utilise addDoc pour laisser Firestore générer l'ID
+                const docRef = await addDoc(collection(db, dbPath('news')), dataToSave);
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('article-form');
-            const statusMessage = document.getElementById('status-message');
-            const btn = document.getElementById('publish-btn');
-            
-            // Éléments de Prévisualisation
-            const previewTitle = document.getElementById('preview-title');
-            const previewSummary = document.getElementById('preview-summary');
-            const previewImage = document.getElementById('preview-image');
-            const previewCategory = document.getElementById('preview-category');
+                statusElement.textContent = `✅ Article publié avec succès ! ID: ${docRef.id}`;
+                statusElement.className = 'bg-green-100 text-green-700 border border-green-300 p-3 rounded-xl block';
+                
+                // Réinitialiser le formulaire
+                form.reset();
+                // Forcer la mise à jour de la prévisualisation après reset
+                updatePreview();
 
-            // Éléments du Formulaire
+            } catch (error) {
+                console.error("Erreur de publication:", error);
+                statusElement.textContent = `❌ Échec de la publication: ${error.message}`;
+                statusElement.className = 'bg-red-100 text-red-700 border border-red-300 p-3 rounded-xl block';
+            } finally {
+                button.disabled = false;
+            }
+        };
+
+        // --- Logique de Prévisualisation ---
+        const DEFAULT_IMAGE = "https://placehold.co/300x180/E0E0E0/666666?text=Image+de+couverture";
+
+        const updatePreview = () => {
             const inputTitle = document.getElementById('title');
             const inputSummary = document.getElementById('summary');
             const inputImageUrl = document.getElementById('imageUrl');
             const inputCategory = document.getElementById('category');
 
-            // Fonction de Mise à Jour de la Prévisualisation
-            const updatePreview = () => {
-                // Mise à jour du texte
-                previewTitle.textContent = inputTitle.value || "Titre de l'Article...";
-                previewSummary.textContent = inputSummary.value || "Le résumé de l'article sera affiché ici pour voir comment il apparaît sur la page d'accueil.";
-                previewCategory.textContent = inputCategory.value.toUpperCase() || "SÉLECTIONNER"; // Afficher 'SÉLECTIONNER' si rien n'est choisi
-                
-                // Gestion de l'image (avec onerror si l'image chargée est invalide)
-                const imageUrl = inputImageUrl.value;
-                if (imageUrl && imageUrl.startsWith('http')) {
-                    previewImage.src = imageUrl;
-                } else {
-                    previewImage.src = DEFAULT_IMAGE;
-                }
-            };
+            const previewTitle = document.getElementById('preview-title');
+            const previewSummary = document.getElementById('preview-summary');
+            const previewImage = document.getElementById('preview-image');
+            const previewCategory = document.getElementById('preview-category');
+
+            // Mise à jour du texte
+            previewTitle.textContent = inputTitle.value || "Titre de l'Article...";
+            previewSummary.textContent = inputSummary.value || "Le résumé de l'article sera affiché ici pour voir comment il apparaît sur la page d'accueil.";
+            previewCategory.textContent = inputCategory.value.toUpperCase() || "SÉLECTIONNER";
             
-            // Écouteur pour gérer les erreurs de chargement d'image
-            previewImage.onerror = () => {
+            // Gestion de l'image (avec onerror)
+            const imageUrl = inputImageUrl.value;
+            if (imageUrl && imageUrl.startsWith('http')) {
+                previewImage.src = imageUrl;
+            } else {
                 previewImage.src = DEFAULT_IMAGE;
+            }
+        };
+        
+        // --- Initialisation au chargement du DOM ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
+
+            const form = document.getElementById('article-form');
+            const statusMessage = document.getElementById('status-message');
+            const btn = document.getElementById('publish-btn');
+            const inputTitle = document.getElementById('title');
+            const inputSummary = document.getElementById('summary');
+            const inputImageUrl = document.getElementById('imageUrl');
+            const inputCategory = document.getElementById('category');
+
+            // Événement d'erreur pour l'image de prévisualisation
+            document.getElementById('preview-image').onerror = (e) => {
+                e.target.src = DEFAULT_IMAGE;
             };
 
             // Ajouter des écouteurs d'événements pour la prévisualisation en direct
-            inputTitle.addEventListener('input', updatePreview);
-            inputSummary.addEventListener('input', updatePreview);
-            inputImageUrl.addEventListener('input', updatePreview);
-            inputCategory.addEventListener('change', updatePreview);
-            
+            [inputTitle, inputSummary, inputImageUrl, inputCategory].forEach(el => {
+                el.addEventListener('input', updatePreview);
+                el.addEventListener('change', updatePreview); // Pour le <select>
+            });
+
             // Gestion de l'événement de Soumission
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 
-                // Vérification CRITIQUE de la fonction `publishArticle`
-                if (typeof publishArticle !== 'function') {
-                    // Message d'erreur personnalisé si setup.js n'est pas chargé ou est mal placé.
-                    statusMessage.textContent = "❌ Erreur: Le script de publication (setup.js) n'est pas chargé. Assurez-vous que <script src='setup.js'></script> est bien présent et que le fichier est dans le même dossier.";
-                    statusMessage.classList.remove('success');
-                    statusMessage.classList.add('error');
-                    statusMessage.style.display = 'block';
-                    return;
-                }
-
-                // Récupération des données du formulaire
                 const newArticleData = {
                     title: inputTitle.value,
-                    // Si le champ Auteur est laissé vide, la valeur par défaut sera utilisée
                     author: document.getElementById('author').value || 'Rédaction Mikuba TV',
                     category: inputCategory.value,
                     summary: inputSummary.value,
                     imageUrl: inputImageUrl.value,
-                    body: document.getElementById('body').value,
+                    content: document.getElementById('body').value, // Renommé 'body' en 'content' pour la cohérence
                 };
 
-                // Appel à la fonction centralisée dans setup.js
-                publishArticle(newArticleData, btn, form, statusMessage);
+                // Appel à la fonction globale de publication
+                window.publishArticle(newArticleData, btn, form, statusMessage);
             });
             
-            // Initialisation de l'aperçu
+            // Initialisation de l'aperçu au chargement
             updatePreview();
-
         });
     </script>
-    
-    <!-- 🔑 Le script setup.js DOIT être chargé après le DOMContentLoaded pour que les fonctions soient disponibles -->
-    <script src="setup.js"></script>
+
+
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-4xl font-extrabold text-primary mb-2 flex items-center">
+            <svg class="w-8 h-8 mr-3 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4h-8a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-2m-2-2h2m-2 0h-2m0 0v2m0 0h2m-2 0h-2m0 0v2m0 0h2m-2 0h-2m0 0v2m0 0h2m-2 0h-2m0 0v2m0 0h2"></path></svg>
+            Tableau de Bord - Publication d'Articles
+        </h1>
+        <p class="text-xl text-sophisticated-gray mb-6">Créez et prévisualisez votre nouvelle actualité pour Mikuba TV.</p>
+        
+        <p class="mb-6">
+            <a href="index.html" class="text-accent font-semibold flex items-center hover:text-primary transition-colors duration-200">
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Retour à l'accueil du site
+            </a>
+        </p>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 bg-white p-6 md:p-10 rounded-2xl shadow-form-card">
+            
+            <!-- SECTION FORMULAIRE (2/3 sur desktop) -->
+            <div class="lg:col-span-2">
+                <form id="article-form">
+                    <!-- Champ Titre -->
+                    <div class="mb-6">
+                        <label for="title" class="block mb-2 font-bold text-lg text-sophisticated-gray">Titre de l'Article <span class="text-primary">*</span></label>
+                        <input type="text" id="title" placeholder="Titre principal impactant (max. 100 chars)" maxlength="100" required
+                               class="w-full p-3 border border-gray-300 rounded-xl text-lg transition duration-300 focus:border-primary focus:shadow-input-focus">
+                    </div>
+                    
+                    <!-- Champ Résumé -->
+                    <div class="mb-6">
+                        <label for="summary" class="block mb-2 font-bold text-lg text-sophisticated-gray">Résumé (pour la carte d'accueil - max. 160 chars) <span class="text-primary">*</span></label>
+                        <input type="text" id="summary" placeholder="Description courte pour accrocher le lecteur." maxlength="160" required
+                               class="w-full p-3 border border-gray-300 rounded-xl text-lg transition duration-300 focus:border-primary focus:shadow-input-focus">
+                    </div>
+
+                    <!-- Champ URL Image -->
+                    <div class="mb-6">
+                        <label for="imageUrl" class="block mb-2 font-bold text-lg text-sophisticated-gray">URL de l'Image de Couverture <span class="text-primary">*</span></label>
+                        <input type="url" id="imageUrl" placeholder="Ex: https://votresite.com/images/article1.jpg" required
+                               class="w-full p-3 border border-gray-300 rounded-xl text-lg transition duration-300 focus:border-primary focus:shadow-input-focus">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <!-- Champ Catégorie -->
+                        <div class="mb-6">
+                            <label for="category" class="block mb-2 font-bold text-lg text-sophisticated-gray">Catégorie <span class="text-primary">*</span></label>
+                            <select id="category" required
+                                    class="w-full p-3 border border-gray-300 rounded-xl text-lg transition duration-300 focus:border-primary focus:shadow-input-focus">
+                                <option value="" disabled selected>Sélectionnez une catégorie</option>
+                                <option value="POLITIQUE">Politique</option>
+                                <option value="ÉCONOMIE">Économie</option>
+                                <option value="SOCIAL">Social</option>
+                                <option value="SPORT">Sport</option>
+                                <option value="SÉCURITÉ">Sécurité</option>
+                                <option value="CULTURE">Culture</option>
+                                <option value="INTERNATIONAL">International</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Champ Auteur -->
+                        <div class="mb-6">
+                            <label for="author" class="block mb-2 font-bold text-lg text-sophisticated-gray">Auteur</label>
+                            <input type="text" id="author" value="Rédaction Mikuba TV" placeholder="Nom du journaliste"
+                                   class="w-full p-3 border border-gray-300 rounded-xl text-lg transition duration-300 focus:border-primary focus:shadow-input-focus">
+                        </div>
+                    </div>
+                    
+                    <!-- Champ Corps de l'Article -->
+                    <div class="mb-6">
+                        <label for="body" class="block mb-2 font-bold text-lg text-sophisticated-gray">Corps de l'Article (Contenu intégral) <span class="text-primary">*</span></label>
+                        <textarea id="body" placeholder="Commencez à rédiger ici. Utilisez des balises HTML de base (<h2>, <p>, <ul>, <strong>) pour la mise en forme." required
+                                  class="w-full p-4 border border-gray-300 rounded-xl text-lg transition duration-300 focus:border-primary focus:shadow-input-focus"></textarea>
+                    </div>
+
+                    <!-- Bouton Publier -->
+                    <button type="submit" id="publish-btn" disabled
+                            class="w-full bg-primary text-white font-extrabold py-4 px-6 rounded-xl text-xl uppercase tracking-wider 
+                                   shadow-lg shadow-primary/50 transition duration-300 transform hover:bg-red-700 hover:scale-[1.005] 
+                                   disabled:bg-gray-400 disabled:shadow-none disabled:cursor-not-allowed disabled:transform-none">
+                        <span id="publish-text">Connexion DB...</span>
+                    </button>
+                </form>
+
+                <!-- Message de statut (Success/Error) -->
+                <div id="status-message" class="mt-6 p-4 rounded-xl font-semibold text-center hidden"></div>
+            </div>
+
+            <!-- SECTION PRÉVISUALISATION EN DIRECT (1/3 sur desktop, Sticky) -->
+            <div class="lg:col-span-1 p-5 lg:p-6 bg-body-bg rounded-2xl shadow-inner border-t-8 border-accent lg:h-fit lg:sticky lg:top-10">
+                <h2 class="text-2xl font-black text-accent mb-6 pb-2 border-b-2 border-accent/50 text-center">Aperçu de la Carte</h2>
+                
+                <div class="bg-white rounded-xl overflow-hidden shadow-xl border border-gray-200">
+                    <img id="preview-image" src="https://via.placeholder.com/300x180/E0E0E0/666666?text=Image+de+couverture" 
+                         alt="Aperçu de l'image" class="w-full h-48 object-cover bg-gray-200"
+                         onerror="this.onerror=null;this.src='https://placehold.co/300x180/E0E0E0/666666?text=Image+de+couverture'">
+                    
+                    <div class="p-4 md:p-5">
+                        <p class="text-xs font-bold text-gray-500 mb-1.5 flex justify-between items-center">
+                            <span id="preview-category" class="uppercase text-primary">SÉLECTIONNER</span> 
+                            <span>Aujourd'hui</span>
+                        </p>
+                        <h3 id="preview-title" class="text-xl font-extrabold text-secondary mb-3 min-h-[50px] line-clamp-2">Titre de l'Article...</h3>
+                        <p id="preview-summary" class="text-sm text-sophisticated-gray line-clamp-3 min-h-[60px]">Le résumé de l'article sera affiché ici pour voir comment il apparaît sur la page d'accueil.</p>
+                    </div>
+                </div>
+
+                <p class="text-sm text-center text-gray-500 mt-4 italic">Ceci est un aperçu de la carte affichée sur la page d'accueil.</p>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
