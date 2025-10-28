@@ -7,8 +7,9 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <!-- ⚠️ CORRECTION CRITIQUE : Utilisation des CDN Firebase v8 (standard pour firebase.initializeApp) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         /* Styles CSS Pro (Basé sur Inter et un thème Bleu/Gris Moderne) */
@@ -66,6 +67,10 @@
             width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: var(--border-radius);
             font-size: 1em; transition: all 0.3s; background-color: #FFFFFF;
         }
+        input:disabled, textarea:disabled {
+            background-color: #ECEFF1; /* Gris clair pour indiquer qu'ils sont désactivés */
+            cursor: not-allowed;
+        }
         input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus { 
             border-color: var(--primary-color); 
             box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.15); 
@@ -115,11 +120,11 @@
         /* ------------------------------------------- */
         .preview-section {
             padding: 20px;
-            background-color: #e3f2fd; 
+            background-color: #e3f2fd; /* Couleur d'arrière-plan douce */
             border-radius: var(--border-radius);
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
             min-height: 400px;
-            position: sticky; /* Reste visible pendant le défilement du formulaire */
+            position: sticky; 
             top: 20px;
         }
         .preview-section h2 {
@@ -211,12 +216,13 @@
                     
                     <div class="form-group">
                         <label for="author">Auteur</label>
+                        <!-- Rendre le champ optionnel si l'on veut utiliser la valeur par défaut de JS -->
                         <input type="text" id="author" value="Rédaction Mikuba TV" placeholder="Nom du journaliste ou de l'équipe de rédaction">
                     </div>
 
                     <div class="form-group">
                         <label for="body">Corps de l'Article (Contenu intégral) <span style="color: var(--primary-color);">*</span></label>
-                        <textarea id="body" placeholder="Commencez à rédiger ici. Utilisez des balises HTML de base (<h2>, <p>) pour la mise en forme. Attention : les balises HTML seront insérées directement dans la base de données !" required></textarea>
+                        <textarea id="body" placeholder="Commencez à rédiger ici. Utilisez des balises HTML de base (<h2>, <p>, <ul>, <ol>) pour la mise en forme. Attention : les balises HTML seront insérées directement dans la base de données !" required></textarea>
                     </div>
 
                     <button type="submit" id="publish-btn">Publier l'Article</button>
@@ -264,9 +270,9 @@
                 // Mise à jour du texte
                 previewTitle.textContent = inputTitle.value || "Titre de l'Article...";
                 previewSummary.textContent = inputSummary.value || "Le résumé de l'article sera affiché ici pour voir comment il apparaît sur la page d'accueil.";
-                previewCategory.textContent = inputCategory.value.toUpperCase() || "GÉNÉRAL";
+                previewCategory.textContent = inputCategory.value.toUpperCase() || "SÉLECTIONNER"; // Afficher 'SÉLECTIONNER' si rien n'est choisi
                 
-                // Gestion de l'image
+                // Gestion de l'image (avec onerror si l'image chargée est invalide)
                 const imageUrl = inputImageUrl.value;
                 if (imageUrl && imageUrl.startsWith('http')) {
                     previewImage.src = imageUrl;
@@ -275,6 +281,11 @@
                 }
             };
             
+            // Écouteur pour gérer les erreurs de chargement d'image
+            previewImage.onerror = () => {
+                previewImage.src = DEFAULT_IMAGE;
+            };
+
             // Ajouter des écouteurs d'événements pour la prévisualisation en direct
             inputTitle.addEventListener('input', updatePreview);
             inputSummary.addEventListener('input', updatePreview);
@@ -287,8 +298,8 @@
                 
                 // Vérification CRITIQUE de la fonction `publishArticle`
                 if (typeof publishArticle !== 'function') {
-                    // C'est cette erreur personnalisée qui est affichée si setup.js n'est pas chargé
-                    statusMessage.textContent = "❌ Erreur: Le script de publication (setup.js) n'est pas chargé. Vérifiez le nom du fichier et son emplacement (même dossier).";
+                    // Message d'erreur personnalisé si setup.js n'est pas chargé ou est mal placé.
+                    statusMessage.textContent = "❌ Erreur: Le script de publication (setup.js) n'est pas chargé. Assurez-vous que <script src='setup.js'></script> est bien présent et que le fichier est dans le même dossier.";
                     statusMessage.classList.remove('success');
                     statusMessage.classList.add('error');
                     statusMessage.style.display = 'block';
@@ -298,7 +309,8 @@
                 // Récupération des données du formulaire
                 const newArticleData = {
                     title: inputTitle.value,
-                    author: document.getElementById('author').value,
+                    // Si le champ Auteur est laissé vide, la valeur par défaut sera utilisée
+                    author: document.getElementById('author').value || 'Rédaction Mikuba TV',
                     category: inputCategory.value,
                     summary: inputSummary.value,
                     imageUrl: inputImageUrl.value,
@@ -309,15 +321,13 @@
                 publishArticle(newArticleData, btn, form, statusMessage);
             });
             
-            // Initialisation de l'aperçu et gestion des erreurs d'image
+            // Initialisation de l'aperçu
             updatePreview();
-            previewImage.onerror = () => {
-                previewImage.src = DEFAULT_IMAGE;
-            };
 
         });
     </script>
     
+    <!-- 🔑 Le script setup.js DOIT être chargé après le DOMContentLoaded pour que les fonctions soient disponibles -->
     <script src="setup.js"></script>
 
 </body>
