@@ -1,260 +1,324 @@
-/**
- * Fichier : setup.js
- * Description : Configuration de Firebase et fonctions de manipulation de la base de données pour Mikuba TV.
- * ATTENTION : Ce code utilise la syntaxe globale (v8/v9) compatible avec les balises script CDN.
- */
-
-// ----------------------------------------------------
-// ÉTAPE 1 : CONFIGURATION ET INITIALISATION DE FIREBASE
-// ----------------------------------------------------
-// REMPLACER LES VALEURS PAR VOS VRAIES CLÉS !
-const firebaseConfig = {
-    apiKey: "AIzaSyAiMnvIMBqn2VqSQsFpb-Ajx5VORVd0JoA", // ⚠️ UTILISEZ VOTRE VRAIE CLÉ
-    authDomain: "danicakakudji.firebaseapp.com",
-    projectId: "danicakakudji",
-    storageBucket: "danicakakudji.firebasestorage.app", // Mis à jour avec votre valeur
-    messagingSenderId: "409346091245",
-    appId: "1:409346091245:web:6674becbc81d97c292c4e4"
-};
-
-// Vérification et Initialisation de l'application Firebase
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    try {
-        firebase.initializeApp(firebaseConfig);
-        console.log("Firebase initialisé avec succès !");
-    } catch (e) {
-        console.error("Erreur critique lors de l'initialisation de Firebase:", e);
-    }
-}
-
-// Référence à la base de données Realtime
-const database = typeof firebase !== 'undefined' ? firebase.database() : null; 
-
-// ----------------------------------------------------
-// FONCTION DE PUBLICATION (Pour admin.html)
-// ----------------------------------------------------
-
-/**
- * Publie un nouvel article sur Firebase.
- */
-function publishArticle(articleData, btn, form, statusMessage) {
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIKUBA TV | Actualité Internationale et Afrique - En Direct</title>
     
-    if (!database) {
-        // Affiche une erreur si la base de données n'a pas pu être initialisée
-        statusMessage.textContent = '❌ Erreur: Base de données non connectée. Vérifiez les clés API et les CDN.';
-        statusMessage.classList.add('error');
-        statusMessage.style.display = 'block';
-        return;
-    }
-
-    // 1. Gestion de l'état UI - Démarrage
-    btn.disabled = true;
-    btn.textContent = 'Envoi en cours...';
-    statusMessage.style.display = 'none';
-    statusMessage.classList.remove('success', 'error');
-
-    // 2. Ajout des métadonnées
-    articleData.timestamp = firebase.database.ServerValue.TIMESTAMP;
-    const now = new Date();
-    articleData.date = now.toLocaleDateString('fr-FR', {
-        day: '2-digit', month: '2-digit', year: 'numeric' 
-    }).replace(/\//g, '-'); 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
-    // 3. Écrire dans la collection 'articles'
-    database.ref('articles').push(articleData)
-        .then(() => {
-            // Succès
-            console.log("Article publié avec succès !");
-            statusMessage.textContent = '✅ Article publié avec succès ! Redirection vers index.html en cours...';
-            statusMessage.classList.add('success');
-            form.reset(); 
-            
-            // Redirection après publication pour UX
-            setTimeout(() => {
-                window.location.href = 'index.html'; 
-            }, 2000); 
-        })
-        .catch((error) => {
-            // Erreur
-            console.error("Erreur de publication:", error);
-            statusMessage.textContent = `❌ Erreur lors de la publication : ${error.message || 'Problème de connexion ou de permissions.'}`;
-            statusMessage.classList.add('error');
-        })
-        .finally(() => {
-            // Finalisation
-            statusMessage.style.display = 'block';
-            btn.disabled = false;
-            btn.textContent = 'Publier l\'Article';
-        });
-}
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
 
-// ----------------------------------------------------
-// FONCTIONS UTILITAIRES POUR L'AFFICHAGE (index.html, article.html)
-// (Conservez ces fonctions pour la suite)
-// ----------------------------------------------------
+    <style>
+        /* Variables et Reset CSS */
+        :root {
+            --primary-color: #C00000; /* Rouge Puissant (comme les grandes chaînes) */
+            --secondary-color: #333333; /* Gris très foncé pour le corps de texte */
+            --accent-color: #0077B6; /* Bleu Vif pour les liens */
+            --text-color-light: #F8F9FA;
+            --light-bg: #FFFFFF;
+            --dark-bg: #1A1A1A;
+            --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --border-radius: 4px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--text-color-light); color: var(--secondary-color); line-height: 1.6; }
+        a { text-decoration: none; color: var(--accent-color); transition: color 0.2s; }
+        a:hover { color: var(--primary-color); }
 
-function insertNewsCard(article, articleId, containerId, isMajor = false) {
-    const container = document.getElementById(containerId);
-    if (!container) return; 
-
-    const title = article.title || 'Titre manquant';
-    const summary = article.summary || 'Résumé non disponible.';
-    const category = article.category ? article.category.toUpperCase() : 'GÉNÉRAL';
-    const date = article.date || 'Date inconnue'; 
-    const imageUrl = article.imageUrl && article.imageUrl.startsWith('http') ? article.imageUrl : 'https://via.placeholder.com/900x500/CCCCCC/666666?text=Image+Manquante';
-    const link = `article.html?id=${articleId}`; 
-
-    const imageHeight = isMajor ? '550px' : '220px'; 
-    
-    const cardHTML = `
-        <img src="${imageUrl}" alt="Image de couverture pour : ${title}" style="height: ${imageHeight};" loading="lazy">
-        <div class="card-content">
-            <p style="font-size: 0.8em; color: var(--primary-color); font-weight: bold;">${category}</p>
-            <p style="font-size: 0.75em; color: gray; margin-bottom: 5px;">${date}</p>
-            <h3>${title}</h3>
-            <p>${summary}</p>
-            <span style="display: block; margin-top: 10px; font-weight: 500; color: var(--accent-color);">Lire le reportage →</span>
-        </div>
-    `;
-
-    if (isMajor) {
-        container.innerHTML = cardHTML;
-        container.setAttribute('onclick', `window.location.href='${link}'`);
-        container.classList.add('major-news-card'); 
-    } else {
-        const newArticle = document.createElement('article');
-        newArticle.classList.add('news-card');
-        newArticle.setAttribute('onclick', `window.location.href='${link}'`);
-        newArticle.innerHTML = cardHTML;
-        container.appendChild(newArticle);
-    }
-}
-
-function displayArticleError(message) {
-    const container = document.getElementById('article-content-container');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div style="text-align: center; margin-top: 50px; color: var(--primary-color);">
-            <h2 style="font-size: 2em; border-bottom: none;">📰 Erreur de Chargement</h2>
-            <p style="font-size: 1.1em; margin-top: 20px;">${message}</p>
-            <p style="margin-top: 30px;"><a href="index.html">Retour à la page d'accueil</a></p>
-        </div>
-    `;
-    const pageTitle = document.querySelector('title');
-    if (pageTitle) pageTitle.textContent = "Erreur - Mikuba TV";
-}
-
-function loadNews() {
-    if (!database) return;
-    const newsRef = database.ref('articles').orderByChild('timestamp').limitToLast(10); 
-    const majorContainer = document.getElementById('major-news-container');
-    const secondaryContainer = document.getElementById('secondary-news-container');
-    const trendingList = document.getElementById('trending-list');
-
-    if (secondaryContainer) secondaryContainer.innerHTML = ''; 
-
-    newsRef.once('value', (snapshot) => {
-        const articles = [];
-        snapshot.forEach((childSnapshot) => {
-            articles.push({ id: childSnapshot.key, ...childSnapshot.val() });
-        });
-
-        articles.reverse(); 
-
-        const majorArticle = articles[0];
-        if (majorArticle) {
-            if (majorContainer) majorContainer.innerHTML = '';
-            insertNewsCard(majorArticle, majorArticle.id, 'major-news-container', true);
-        } else {
-            if (majorContainer) majorContainer.innerHTML = '<div class="card-content"><h3>Pas d\'actualité principale</h3><p>Veuillez ajouter des données via admin.html.</p></div>';
+        /* ------------------------------------- */
+        /* HEADER ET NAVIGATION */
+        /* ------------------------------------- */
+        .top-bar {
+            background-color: var(--dark-bg);
+            color: var(--text-color-light);
+            padding: 10px 0;
+            font-size: 0.85em;
+        }
+        .top-bar-content {
+            max-width: 1300px; margin: 0 auto; padding: 0 20px;
+            display: flex; justify-content: flex-end;
+        }
+        .header-main {
+            background-color: var(--light-bg);
+            padding: 25px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .header-content {
+            max-width: 1300px; margin: 0 auto; padding: 0 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo { font-size: 2.5em; font-weight: 900; color: var(--dark-bg); }
+        .logo span { color: var(--primary-color); font-weight: 900; }
+        
+        .nav-links a {
+            margin-left: 25px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--secondary-color);
+        }
+        .nav-links a:hover {
+            color: var(--primary-color);
         }
         
-        const secondaryArticles = articles.slice(1, 4); 
-        
-        if (secondaryArticles.length > 0) {
-             if (secondaryContainer) secondaryContainer.innerHTML = ''; 
-             secondaryArticles.forEach(article => {
-                insertNewsCard(article, article.id, 'secondary-news-container', false);
-            });
-        } else if (articles.length > 0) {
-            if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; font-style: italic; color: #777;">Seul un article principal est disponible.</p>';
-        } else {
-            if (secondaryContainer) secondaryContainer.innerHTML = '<p style="padding: 20px; grid-column: 1 / -1; font-style: italic; color: #777;">Aucun article disponible.</p>';
+        /* ------------------------------------- */
+        /* LAYOUT PRINCIPAL (3 colonnes pour le pro) */
+        /* ------------------------------------- */
+        .main-container {
+            max-width: 1300px; margin: 30px auto; padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
         }
-        
-        if (trendingList) {
-            trendingList.innerHTML = ''; 
-            const trendingArticles = articles.slice(0, Math.min(5, articles.length));
-            
-            if (trendingArticles.length > 0) {
-                trendingArticles.forEach(article => {
-                    const link = `article.html?id=${article.id}`;
-                    trendingList.innerHTML += `
-                        <li class="trending-item">
-                            <a href="${link}" title="${article.title}">${article.title}</a>
-                        </li>
-                    `;
-                });
-            } else {
-                 trendingList.innerHTML = '<li>Aucun article récent à afficher.</li>';
+        @media (min-width: 1024px) {
+            .main-container {
+                /* 1/4 pour la sidebar gauche, 2/4 pour l'éditorial, 1/4 pour les tendances */
+                grid-template-columns: 1fr 2fr 1fr;
             }
         }
+        
+        .section-title {
+            font-size: 1.8em;
+            font-weight: 900;
+            color: var(--dark-bg);
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 4px solid var(--primary-color);
+        }
+        .section-title.secondary {
+            border-bottom: 2px solid var(--secondary-color);
+            font-size: 1.4em;
+        }
 
-    }, (error) => {
-        console.error("Erreur de connexion Firebase:", error);
-    });
-}
+        /* ------------------------------------- */
+        /* COLUMN 1 : SIDEBAR GAUCHE (Navigation Rapide) */
+        /* ------------------------------------- */
+        .sidebar-left {
+            display: none; /* Cache par défaut sur mobile */
+        }
+        @media (min-width: 1024px) {
+            .sidebar-left {
+                display: block;
+                padding-right: 20px;
+                border-right: 1px solid #E0E0E0;
+            }
+        }
+        .category-list {
+            list-style: none;
+        }
+        .category-list li a {
+            display: block;
+            padding: 12px 0;
+            font-weight: 600;
+            border-bottom: 1px dotted #EEE;
+            color: var(--secondary-color);
+        }
+        .category-list li a:hover {
+            color: var(--primary-color);
+            padding-left: 5px;
+        }
 
-function loadArticle(articleId) {
-    if (!database) {
-        displayArticleError("Erreur de connexion à la base de données Firebase.");
-        return;
-    }
+        /* ------------------------------------- */
+        /* COLUMN 2 : ZONE ÉDITORIALE & GRANDE UNE */
+        /* ------------------------------------- */
+        .editorial-content {
+            grid-column: 1 / -1; /* Prend toute la largeur sur mobile */
+        }
+        @media (min-width: 1024px) {
+            .editorial-content {
+                grid-column: 2 / 3; /* Prend la colonne centrale sur desktop */
+            }
+        }
+        .major-news-card {
+            background-color: #F8F8F8;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-subtle);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .major-news-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .major-news-card img {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+            background-color: #ddd;
+        }
+        .major-news-card .card-content {
+            padding: 30px;
+        }
+        .major-news-card h3 {
+            font-size: 2.4em;
+            font-weight: 900;
+            color: var(--dark-bg);
+            margin-bottom: 15px;
+        }
+        .major-news-card p {
+            color: var(--secondary-color);
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+
+        /* Grille des Reportages Récents (sous la UNE) */
+        .secondary-news-grid {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .news-card {
+            background-color: var(--light-bg);
+            border: 1px solid #EEE;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            cursor: pointer;
+            transition: box-shadow 0.3s;
+        }
+        .news-card:hover {
+            box-shadow: var(--shadow-subtle);
+        }
+        .news-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background-color: #ddd;
+        }
+        .news-card .card-content {
+            padding: 15px;
+        }
+        .news-card h3 {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--dark-bg);
+            margin-bottom: 8px;
+        }
+
+        /* ------------------------------------- */
+        /* COLUMN 3 : SIDEBAR DROITE (Tendances / Annonces) */
+        /* ------------------------------------- */
+        .sidebar-right {
+             /* Prend toute la largeur sur mobile, puis sa propre colonne */
+            padding-left: 20px;
+            border-left: 1px solid #E0E0E0;
+        }
+        .sidebar-right h2 {
+            border-bottom: 2px solid var(--accent-color);
+        }
+        .trending-list {
+            list-style: none;
+            padding: 0;
+        }
+        .trending-item {
+            padding: 15px 0;
+            border-bottom: 1px dotted #DDD;
+        }
+        .trending-item a {
+            font-weight: 600;
+            color: var(--secondary-color);
+            display: block;
+        }
+        .trending-item a:hover {
+            color: var(--primary-color);
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="top-bar-content">
+            <span style="margin-right: 20px;">📅 <span id="current-date"></span></span>
+            <a href="admin.html" style="color: var(--accent-color); font-weight: 500;">🛠️ Administration</a>
+        </div>
+    </div>
+
+    <header class="header-main">
+        <div class="header-content">
+            <div class="logo">MIKUBA<span>TV</span></div>
+            <nav class="nav-links">
+                <a href="#">Afrique</a>
+                <a href="#">Monde</a>
+                <a href="#">Économie</a>
+                <a href="#">Sport</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-container">
+        
+        <aside class="sidebar-left">
+            <h2 class="section-title secondary">Catégories</h2>
+            <ul class="category-list">
+                <li><a href="#">Politique Nationale</a></li>
+                <li><a href="#">Sécurité & Défense</a></li>
+                <li><a href="#">Dossiers Spéciaux</a></li>
+                <li><a href="#">Culture & Société</a></li>
+                <li><a href="#">Santé & Environnement</a></li>
+            </ul>
+        </aside>
+        
+        <section class="editorial-content">
+            <h2 class="section-title">À LA UNE</h2>
+            
+            <div id="major-news-container">
+                 <div class="major-news-card" style="text-align: center; padding: 50px;">
+                    <h3 style="color: var(--primary-color);">Chargement de l'Actualité...</h3>
+                    <p>Veuillez patienter ou vérifier votre connexion Firebase.</p>
+                 </div>
+            </div>
+
+            <h2 class="section-title secondary" style="margin-top: 40px;">Reportages Récents</h2>
+
+            <div id="secondary-news-container" class="secondary-news-grid">
+                <p style="grid-column: 1 / -1; text-align: center; color: #777;">Chargement des articles secondaires...</p>
+            </div>
+        </section>
+
+        <aside class="sidebar-right">
+            <h2 class="section-title secondary">🔥 Les Plus Lus</h2>
+            <ul id="trending-list" class="trending-list">
+                <li>Chargement des articles tendances...</li>
+            </ul>
+            
+            <div style="margin-top: 40px; text-align: center; padding: 20px; background-color: #F0F0F0; border-radius: 4px;">
+                <h3 style="color: var(--primary-color); font-size: 1.2em;">MIKUBA TV LIVE</h3>
+                <p style="font-size: 0.9em; margin-top: 10px;">Regardez notre émission en direct dès maintenant.</p>
+                <button style="background-color: var(--primary-color); color: white; border: none; padding: 10px 20px; margin-top: 15px; font-weight: 700; cursor: pointer; border-radius: 4px;">Accéder au Live</button>
+            </div>
+        </aside>
+
+    </main>
+
+    <footer style="text-align: center; padding: 30px 20px; margin-top: 40px; background-color: var(--dark-bg); color: #B0B0B0;">
+        &copy; 2025 Mikuba TV. Tous droits réservés. | Partenariats et Publicité.
+    </footer>
+
+    <script src="setup.js"></script>
     
-    const articleRef = database.ref('articles/' + articleId);
-    const container = document.getElementById('article-content-container');
+    <script>
+        // Afficher la date actuelle dans la top-bar
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
 
-    articleRef.once('value', (snapshot) => {
-        const article = snapshot.val();
-        
-        if (!article) {
-            displayArticleError(`Article avec l'ID '${articleId}' introuvable dans la base de données.`);
-            return;
-        }
-        
-        const pageTitle = document.querySelector('title');
-        if (pageTitle) pageTitle.textContent = `${article.title} - Mikuba TV`;
-
-        const articleContent = article.body || '<p>Le corps complet de l\'article n\'est pas disponible. Veuillez vérifier les données dans Firebase.</p>';
-
-        const articleHTML = `
-            <div class="article-header">
-                <h1>${article.title}</h1>
-                <div class="article-meta">
-                    <span class="category">${article.category || 'Général'}</span>
-                    <span>Par ${article.author || 'Rédaction Mikuba TV'}</span>
-                    <span>Publié le ${article.date || 'Date inconnue'}</span>
-                </div>
-            </div>
-            
-            <figure class="article-cover">
-                <img src="${article.imageUrl || 'https://via.placeholder.com/900x500/CCCCCC/666666?text=Image+Manquante'}" alt="Image de couverture pour ${article.title}">
-            </figure>
-            
-            <div class="article-body">
-                ${articleContent}
-            </div>
-        `;
-        
-        if (container) {
-            const statusIndicator = container.querySelector('[role="status"]');
-            if (statusIndicator) statusIndicator.remove(); 
-            container.innerHTML = articleHTML;
-        }
-        
-    }, (error) => {
-        console.error("Erreur de chargement Firebase:", error);
-        displayArticleError("Erreur de connexion à la base de données Firebase.");
-    });
-}
+        document.addEventListener('DOMContentLoaded', () => {
+            // Appel à la fonction loadNews() définie dans setup.js
+            if (typeof loadNews === 'function') {
+                loadNews();
+            } else {
+                console.error("Erreur Critique: La fonction loadNews() de setup.js n'est pas trouvée. Vérifiez le chargement de setup.js.");
+                // Afficher un message d'erreur clair si Firebase ne se charge pas
+                const mainContainer = document.getElementById('major-news-container');
+                if (mainContainer) {
+                    mainContainer.innerHTML = 
+                        '<div class="major-news-card" style="padding: 30px; background-color: #FEE;"><h3>Erreur!</h3><p>Impossible de charger les actualités. Vérifiez la clé API et la console du navigateur (F12).</p></div>';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
